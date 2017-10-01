@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html class="mdc-typography">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Passwordr</title>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/material-components-web@0.20.0/dist/material-components-web.min.css">
+        <style>
+            :root {
+                --mdc-theme-primary: #0e4ead;
+            }
+            
+            .mdc-ripple-surface.mdc-ripple-upgraded.mdc-button--primary::before,
+            .mdc-ripple-surface.mdc-ripple-upgraded.mdc-button--primary::after {
+                background-color: rgba(255, 255, 255, .2);
+            }
+            
+            #sign-in-form > button {
+                margin-top: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="mdc-card">
+                <div class="mdc-card__horizontal-block">
+                    <section class="mdc-card__primary">
+                        <h1 id="user-name" class="mdc-card__title mdc-card__title--large">Title here</h1>
+                    </section>
+                    <img id="user-pic" class="mdc-card__media-item">
+                </div>
+                <section class="mdc-card__actions">
+                    <button id="sign-in" class="mdc-button mdc-button--compact mdc-card__action">Sign in</button>
+                    <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
+                </section>
+            </div>
+        </header>
+        <main>
+            <h1 class="mdc-typography--display1">Passwords</h1>
+            <button id="new-password" class="mdc-button mdc-button--compact mdc-card__action">New</button>
+            <div id="passwords">
+            </div>
+            <div id="must-signin-snackbar"
+                 class="mdc-snackbar"
+                 aria-live="assertive"
+                 aria-atomic="true"
+                 aria-hidden="true">
+                <div class="mdc-snackbar__text"></div>
+                <div class="mdc-snackbar__action-wrapper">
+                <button type="button" class="mdc-snackbar__action-button"></button>
+                </div>
+            </div>
+        </main>
+        
+        <script src="https://unpkg.com/material-components-web@0.20.0/dist/material-components-web.min.js"></script>
+        <script>window.mdc.autoInit();</script>
+        <script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
+        <script>
+          // Initialize Firebase
+          var config = {
+            apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
+            authDomain: "passwordr-3917b.firebaseapp.com",
+            databaseURL: "https://passwordr-3917b.firebaseio.com",
+            projectId: "passwordr-3917b",
+            storageBucket: "passwordr-3917b.appspot.com",
+            messagingSenderId: "690176352805"
+          };
+          firebase.initializeApp(config);
+        </script>
+        <script src="scripts/main.js"></script>
+    </body>
+</html>

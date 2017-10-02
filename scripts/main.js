@@ -1,5 +1,8 @@
 'use strict';
 
+const MDCSnackbar = mdc.snackbar.MDCSnackbar;
+const MDCDialog = mdc.dialog.MDCDialog;
+
 // Initializes Passwordr
 function Passwordr() {
     this.checkSetup();
@@ -7,14 +10,26 @@ function Passwordr() {
     // Shortcuts to DOM elements
     this.passwordList = document.getElementById('passwords');    
     this.signInButton = document.getElementById('sign-in');
-    this.signOutButton = document.getElementById('sign-out');    
+    this.signOutButton = document.getElementById('sign-out');
+    this.newPasswordButton = document.getElementById('new-password');  
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
-    this.signInSnackbar = document.getElementById('must-signin-snackbar');    
+    this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
+    this.newPasswordDialog = new MDCDialog(document.getElementById('new-password-dialog'));
+    
+    var passwordr = this;    
+    this.newPasswordDialog.listen('MDCDialog:accept', function() {
+        passwordr.newPassword();
+    });
 
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
-    
+
+    this.newPasswordButton.addEventListener('click', function (evt) {
+        passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
+        passwordr.newPasswordDialog.show();
+    });
+
     this.initFirebase();
 }
 
@@ -40,12 +55,46 @@ Passwordr.prototype.signIn = function() {
     // Sign in to Firebase using popup auth and Google as the identity provider
     var provider = new firebase.auth.GoogleAuthProvider();
     this.auth.signInWithPopup(provider);
+    this.newPasswordButton.removeAttribute('disabled');    
 };
 
 // Signs-out of Passwordr
 Passwordr.prototype.signOut = function() {
     // Sign out of Firebase
     this.auth.signOut();
+};
+
+// Add a new password to the database
+Passwordr.prototype.newPassword = function() {
+    if (this.checkSignedIn()) {
+        var name = document.getElementById('add-name-input').value;
+        var url = document.getElementById('add-url-input').value;
+        var password = document.getElementById('add-password-input').value;
+        var confirmPassword = document.getElementById('add-confirm-password-input').value;
+        var note = document.getElementById('add-note-input').value;
+
+        if (password == confirmPassword) {
+            // update Firebase
+            this.passwordsRef.push({
+                name: name,
+                url: url,
+                password: password,
+                note: note
+            }).catch(function(error) {
+                var data = {
+                    message: 'Error adding password: ' + error,
+                    timeout: 2000
+                };
+                this.messageSnackbar.show(data);
+            });
+        } else {
+            var data = {
+                message: 'Password must match confirm password',
+                timeout: 2000
+            };
+            this.messageSnackbar.show(data);
+        }
+    }
 };
 
 // Template for passwords
@@ -78,7 +127,7 @@ Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
 }
 
 // Returns true if user is signed-in. Otherwise false and displays a message.
-Passwordr.prototype.checkSignedInWithPassword = function() {
+Passwordr.prototype.checkSignedIn = function() {
     // Check if user is signed in to Firebase
     if (this.auth.currentUser) {
         return true;
@@ -89,7 +138,7 @@ Passwordr.prototype.checkSignedInWithPassword = function() {
         message: 'You must sign in first',
         timeout: 2000
     };
-    this.signInSnackbar.MaterialSnackbar.showSnackbar(data);
+    this.messageSnackbar.show(data);
     return false;
 };
 
@@ -97,12 +146,11 @@ Passwordr.prototype.checkSignedInWithPassword = function() {
 Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key) {
     var newName = nameTextfield.querySelector('.mdc-textfield__input').value;
     var newUrl = urlTextfield.querySelector('.mdc-textfield__input').value;
-    var newPassword = passwordSection.firstChild.querySelector('.mdc-textfield__input').value;
-    var newNote = noteSection.firstChild.querySelector('.mdc-textfield__input').value;
-    var resetBtns = false;
+    var newPassword = passwordSection.querySelector('.mdc-textfield__input').value;    
+    var newNote = noteSection.querySelector('.mdc-textfield__input').value;
 
-    // if no changes were made, simply reset the fields
-    if (nameHeader.textContent == newName && urlHeader.textContent == newUrl && oldPassword == passwordSection.querySelector('.mdc-textfield__input').value && oldNote == noteSection.querySelector('.mdc-textfield__input').value) {
+    // if no changes were made, simply reset the fields, sections, and buttons
+    if (nameHeader.textContent == newName && urlHeader.textContent == newUrl && oldPassword == newPassword && oldNote == newNote) {
         var textfields = nameTextfield.parentNode.querySelectorAll('.mdc-textfield');
         Array.prototype.forEach.call( textfields, function( textfield ) {
             textfield.parentNode.removeChild( textfield );
@@ -111,11 +159,20 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
         nameTextfield.parentNode.appendChild(nameHeader);
         urlTextfield.parentNode.appendChild(urlHeader);
 
-        resetBtns = true;
+        passwordSection.removeChild(passwordSection.firstChild);
+        passwordSection.textContent = newPassword;
+        passwordSection.setAttribute('hidden', 'true'); // hide the password
+        noteSection.removeChild(noteSection.firstChild);
+        noteSection.textContent = newNote;
+
+        var newEditBtn = editBtn.cloneNode(true);
+        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+        newEditBtn.addEventListener('click', this.editPassword.bind(this, nameHeader, urlHeader, passwordSection, noteSection, newEditBtn, revealBtn, key));
+        newEditBtn.textContent = "Edit";
+        revealBtn.removeAttribute('disabled');
     } else {
         // Check that the user entered at least a name and password, and that the user is signed in
-        if (newName.length > 0 && newPassword.length > 0 && this.checkSignedInWithPassword()) {
-            var currentUser = this.auth.currentUser;
+        if (newName.length > 0 && newPassword.length > 0 && this.checkSignedIn()) {
             // update Firebase
             this.passwordsRef.child(key).set({
                 name: newName,
@@ -123,9 +180,13 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
                 password: newPassword,
                 note: newNote
             }).then(function() {
-                resetBtns = true;
+                this.displayPassword(key, newName, newUrl, newPassword, newNote);           
             }.bind(this)).catch(function(error) {
-                console.error('Error saving password', error);
+                var data = {
+                    message: 'Error saving password: ' + error,
+                    timeout: 2000
+                };
+                this.messageSnackbar.show(data);
             });
         } else {
             if (newName.length == 0) {
@@ -133,29 +194,16 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
                     message: 'Name is required',
                     timeout: 2000
                 };
-                this.signInSnackbar.MaterialSnackbar.showSnackbar(data);
+                this.messageSnackbar.show(data);
             }
             if (newPassword.length == 0) {
                 var data = {
                     message: 'Password is required',
                     timeout: 2000
                 };
-                this.signInSnackbar.MaterialSnackbar.showSnackbar(data);
+                this.messageSnackbar.show(data);
             }
         }
-    }
-
-    // this will be the case if either no changes were made, or the database was successfully updated
-    // if the database was not successfully updated (e.g. data validation issues), the buttons should not be changed
-    if (resetBtns) {
-        // change "Done" button back to "Edit" button
-        var newEditBtn = editBtn.cloneNode(true);
-        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-        newEditBtn.addEventListener('click', this.editPassword.bind(this, nameHeader, urlHeader, passwordSection, noteSection, newEditBtn, revealBtn, key));
-        newEditBtn.textContent = "Edit";
-
-        // re-enable reveal button (if is was disabled)
-        revealBtn.removeAttribute('disabled');
     }
 }
 
@@ -168,42 +216,74 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     var nameTextfield = document.createElement('div');
     nameTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
     nameTextfield.querySelector('.mdc-textfield__input').value = nameHeader.textContent;
-    nameHeader.parentNode.appendChild(nameTextfield);
-    nameHeader.parentNode.removeChild(nameHeader);
+    if (nameHeader.parentNode != null) {
+        nameHeader.parentNode.appendChild(nameTextfield);
+        nameHeader.parentNode.removeChild(nameHeader);
+    }
 
     // make url header editable
     var urlTextfield = document.createElement('div');
     urlTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
     urlTextfield.querySelector('.mdc-textfield__input').value = urlHeader.textContent;
-    urlHeader.parentNode.appendChild(urlTextfield);
-    urlHeader.parentNode.removeChild(urlHeader);
+    if (urlHeader.parentNode != null) {
+        urlHeader.parentNode.appendChild(urlTextfield);
+        urlHeader.parentNode.removeChild(urlHeader);
+    }
     
-    // make password section editable
-    var passwordTextfield = document.createElement('div');
-    passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
-    passwordSection.removeAttribute('hidden'); // reveal password
-    passwordTextfield.querySelector('.mdc-textfield__input').value = passwordSection.textContent;
-    var oldPassword = passwordSection.textContent;    
-    passwordSection.textContent = "";    
-    passwordSection.appendChild(passwordTextfield);
+    var oldPassword = "";
+    if (passwordSection.textContent != "") {
+        // make password section editable
+        var passwordTextfield = document.createElement('div');
+        passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
+        passwordSection.removeAttribute('hidden'); // reveal password
+        oldPassword = passwordSection.textContent;
+        passwordTextfield.querySelector('.mdc-textfield__input').value = oldPassword;
+        passwordSection.textContent = "";
+        passwordSection.appendChild(passwordTextfield);
+    }
 
-    // make note section editable
-    var noteTextfield = document.createElement('div');
-    noteTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
-    noteTextfield.querySelector('.mdc-textfield__input').value = noteSection.textContent;
-    var oldNote = noteSection.textContent;
-    noteSection.textContent = "";
-    noteSection.appendChild(noteTextfield);
+    var oldNote = "";
+    if (noteSection.textContent != "") {
+        // make note section editable
+        var noteTextfield = document.createElement('div');
+        noteTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
+        oldNote = noteSection.textContent;
+        noteTextfield.querySelector('.mdc-textfield__input').value = oldNote;
+        noteSection.textContent = "";
+        noteSection.appendChild(noteTextfield);
+    }
 
-    // remove existing event listener, and add new event listener
-    var newEditBtn = editBtn.cloneNode(true);
-    editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-    newEditBtn.addEventListener('click', this.saveChanges.bind(this, newEditBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key));
+    if (editBtn.parentNode != null) {
+        // remove existing event listener, and add new event listener
+        var newEditBtn = editBtn.cloneNode(true);
+    
+        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+        newEditBtn.addEventListener('click', this.saveChanges.bind(this, newEditBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key));
+    }
 }
 
 // Delete a password
-Passwordr.prototype.deletePassword = function(deleteBtn) {
+Passwordr.prototype.deletePassword = function(key) {
+    if (this.checkSignedIn()) {
+        var passwordr = this;
 
+        this.passwordsRef.child(key).remove()
+        .then(function() {
+            var data = {
+                message: 'Remove succeeded.',
+                timeout: 2000
+            };
+            passwordr.messageSnackbar.show(data);
+            passwordr.loadPasswords();
+        })
+        .catch(function(error) {
+            var data = {
+                message: "Remove failed: " + error.message,
+                timeout: 2000
+            };
+            passwordr.messageSnackbar.show(data);
+        });
+    }   
 }
 
 // Display a password in the UI
@@ -225,8 +305,11 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     var passwordSection = div.querySelector('.password');
     var noteSection = div.querySelector('.note');    
 
-    // if name & url fields are still editable (selectors will return null if this is the case), make them uneditable
-    if (nameHeader == null && urlHeader == null) {
+     // if name & url fields are still editable (selectors will return null if this is the case), the password was modified
+    var passwordChanged = nameHeader == null && urlHeader == null;
+    
+    if (passwordChanged) {
+        // make headers uneditable
         var primarySection = div.querySelector('.mdc-card__primary');
         
         var textfields = primarySection.querySelectorAll('.mdc-textfield');
@@ -253,17 +336,42 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     // add event handlers to buttons
     var revealBtn = div.querySelector('.reveal');
     revealBtn.addEventListener('click', this.revealPassword.bind(this, passwordSection, revealBtn));
+    // re-enable reveal button (if it was disabled)
+    if (passwordChanged) {
+        revealBtn.removeAttribute('disabled');
+    }
+
     var editBtn = div.querySelector('.edit');
-    editBtn.addEventListener('click', this.editPassword.bind(this, nameHeader, urlHeader, passwordSection, noteSection, editBtn, revealBtn, key));
+
+    if (passwordChanged) {
+        // change "Done" button back to "Edit" button
+        var newEditBtn = editBtn.cloneNode(true);
+        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+        newEditBtn.addEventListener('click', this.editPassword.bind(this, nameHeader, urlHeader, passwordSection, noteSection, newEditBtn, revealBtn, key));
+        newEditBtn.textContent = "Edit";
+    }
+    else {
+        editBtn.addEventListener('click', this.editPassword.bind(this, nameHeader, urlHeader, passwordSection, noteSection, editBtn, revealBtn, key));
+    }
+
+    // re-attach event listener to delete button
     var deleteBtn = div.querySelector('.delete');
-    deleteBtn.addEventListener('click', this.deletePassword.bind(this, deleteBtn));
+    var newDeleteBtn = deleteBtn.cloneNode(true);
+    deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+    newDeleteBtn.addEventListener('click', this.deletePassword.bind(this, key));
+}
+
+// Remove a password from the UI
+Passwordr.prototype.removePassword = function(key) {
+    var div = document.getElementById(key);
+    div.parentNode.removeChild(div);
 }
 
 // Loads passwords
 Passwordr.prototype.loadPasswords = function() {
-    // Reference to the /passwords/ database path
-    this.passwordsRef = this.database.ref('passwords');
-    // Make sure we remove all previous listeners
+    // Reference to the /users/{$uid}/ database path
+    this.passwordsRef = this.database.ref('users/' + this.auth.currentUser.uid + '/');
+    // Remove all previous listeners
     this.passwordsRef.off();
 
     // Load passwords
@@ -271,8 +379,17 @@ Passwordr.prototype.loadPasswords = function() {
         var val = data.val();
         this.displayPassword(data.key, val.name, val.url, val.password, val.note);
     }.bind(this);
+
+    var passwordr = this;
+
+    var removePassword = function(data) {
+        var val = data.val();
+        passwordr.removePassword(data.key);
+    }
+
     this.passwordsRef.on('child_added', setPassword);
     this.passwordsRef.on('child_changed', setPassword);
+    this.passwordsRef.on('child_removed', removePassword);
 };
 
 // Triggers when the user signs in or signs out
@@ -309,24 +426,6 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
             this.passwordList.removeChild(this.passwordList.lastChild);
         }
     }
-};
-
-// Returns true if user is signed-in. Otherwise, returns false and displays a message
-Passwordr.prototype.checkSignedInWithMessage = function() {
-    // Return true if the user is signed in to Firebase
-    if (this.auth.currentUser) {
-        return true;
-    }
-
-    // Display a message to the user using a Toast
-    var data = {
-        message: 'You must sign-in first',
-        timeout: 2000
-    };
-
-    this.signInSnackbar.MaterialSnackbar.showSnackbar(data);
-
-    return false;
 };
 
 window.onload = function() {

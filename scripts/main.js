@@ -11,15 +11,19 @@ function Passwordr() {
     this.passwordList = document.getElementById('passwords');    
     this.signInButton = document.getElementById('sign-in');
     this.signOutButton = document.getElementById('sign-out');
-    this.newPasswordButton = document.getElementById('new-password');  
+    this.newPasswordButton = document.getElementById('new-password');      
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
     this.newPasswordDialog = new MDCDialog(document.getElementById('new-password-dialog'));
+    this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
     
     var passwordr = this;    
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
         passwordr.newPassword();
+    });
+    this.masterPasswordDialog.listen('MDCDialog:accept', function() {
+        passwordr.setMasterPassword();
     });
 
     this.signInButton.addEventListener('click', this.signIn.bind(this));
@@ -44,7 +48,7 @@ Passwordr.prototype.checkSetup = function() {
 Passwordr.prototype.initFirebase = function() {
     // Shortcuts to Firebase SDK features
     this.auth = firebase.auth();
-    this.database = firebase.database();
+    this.database = firebase./*database()*/firestore();
     
     // Initiate Firebase Auth, and listen to auth state changes
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
@@ -54,8 +58,10 @@ Passwordr.prototype.initFirebase = function() {
 Passwordr.prototype.signIn = function() {
     // Sign in to Firebase using popup auth and Google as the identity provider
     var provider = new firebase.auth.GoogleAuthProvider();
-    this.auth.signInWithPopup(provider);
-    this.newPasswordButton.removeAttribute('disabled');    
+    this.auth.signInWithPopup(provider).then(function(result) {
+        console.log(result.credential.accessToken);
+        console.log(result.user);
+    }.bind(this));
 };
 
 // Signs-out of Passwordr
@@ -64,22 +70,80 @@ Passwordr.prototype.signOut = function() {
     this.auth.signOut();
 };
 
+// Convert the user's ID to a key
+Passwordr.prototype.convertUIDToKey = function(uid) {
+    return new Promise(convert => {
+        var passwordr = this;
+        window.crypto.subtle.importKey(
+            "raw",
+            new TextEncoder("utf-8").encode("Y0zt37HgOx-6ec4d2c8a6993a98ac565f84a32d773f"),
+            {
+                // algorithm
+                name: "AES-GCM",
+            },
+            false, // not extractable
+            ["encrypt", "decrypt"] //can "encrypt", "decrypt", "wrapKey", or "unwrapKey"
+        )
+        .then(function(key){
+            // return the symmetric key
+            return key;
+        })
+        .catch(function(err){
+            var data = {
+                message: 'Key generation error: ' + err,
+                timeout: 2000
+            };
+            passwordr.messageSnackbar.show(data);
+        });
+    });
+};
+
+// Encrypt a string using AES-GCM
+// Passwordr.prototype.encrypt = function(data) {
+//     var passwordr = this;
+//     var cryptoKey = await passwordr.convertUIDToKey(passwordr.auth.currentUser.uid)
+//     window.crypto.subtle.encrypt(
+//         {
+//             name: "AES-GCM",
+
+//             iv: window.crypto.getRandomValues(new Uint8Array(12)),
+
+//             tagLength: 128,
+//         },
+//         cryptoKey,
+//         data
+//     )
+//     .then(function(encrypted){
+//         return new Uint8Array(encrypted);
+//     })
+//     .catch(function(err){
+//         var data = {
+//             message: 'Encryption error: ' + err,
+//             timeout: 2000
+//         };
+//         passwordr.messageSnackbar.show(data);
+//     });
+// }
+
 // Add a new password to the database
 Passwordr.prototype.newPassword = function() {
     if (this.checkSignedIn()) {
-        var name = document.getElementById('add-name-input').value;
-        var url = document.getElementById('add-url-input').value;
+        var name = /*this.encrypt(*/document.getElementById('add-name-input').value/*)*/;
+        var url = /*this.encrypt(*/document.getElementById('add-url-input').value/*)*/;
         var password = document.getElementById('add-password-input').value;
         var confirmPassword = document.getElementById('add-confirm-password-input').value;
-        var note = document.getElementById('add-note-input').value;
+        var note = /*this.encrypt(*/document.getElementById('add-note-input').value/*)*/;
 
         if (password == confirmPassword) {
+            password = /*this.encrypt(*/password/*)*/;
+
             // update Firebase
-            this.passwordsRef.push({
+            this.passwordsRef.add({
                 name: name,
                 url: url,
                 password: password,
-                note: note
+                note: note,
+                userid: this.auth.currentUser.uid
             }).catch(function(error) {
                 var data = {
                     message: 'Error adding password: ' + error,
@@ -94,6 +158,13 @@ Passwordr.prototype.newPassword = function() {
             };
             this.messageSnackbar.show(data);
         }
+    }
+};
+
+Passwordr.prototype.setMasterPassword = function() {
+    if ($('.master-password').val() != '' && $('.master-password').val() === $('.confirm-master-password').val()) {
+        this.masterPassword = $('.master-password').val();
+        $('.master-password-dialog').remove();
     }
 };
 
@@ -148,7 +219,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
     var newUrl = urlTextfield.querySelector('.mdc-textfield__input').value;
     var newPassword = passwordSection.querySelector('.mdc-textfield__input').value;    
     var newNote = noteSection.querySelector('.mdc-textfield__input').value;
-
+    var passwordr = this;
     // if no changes were made, simply reset the fields, sections, and buttons
     if (nameHeader.textContent == newName && urlHeader.textContent == newUrl && oldPassword == newPassword && oldNote == newNote) {
         var textfields = nameTextfield.parentNode.querySelectorAll('.mdc-textfield');
@@ -174,19 +245,21 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
         // Check that the user entered at least a name and password, and that the user is signed in
         if (newName.length > 0 && newPassword.length > 0 && this.checkSignedIn()) {
             // update Firebase
-            this.passwordsRef.child(key).set({
+            this.passwordsRef.doc(key).update({
                 name: newName,
                 url: newUrl,
                 password: newPassword,
                 note: newNote
-            }).then(function() {
-                this.displayPassword(key, newName, newUrl, newPassword, newNote);           
-            }.bind(this)).catch(function(error) {
+            })
+            .then(function() {
+                passwordr.displayPassword(key, newName, newUrl, newPassword, newNote);           
+            })
+            .catch(function(error) {
                 var data = {
                     message: 'Error saving password: ' + error,
                     timeout: 2000
                 };
-                this.messageSnackbar.show(data);
+                passwordr.messageSnackbar.show(data);
             });
         } else {
             if (newName.length == 0) {
@@ -194,14 +267,14 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
                     message: 'Name is required',
                     timeout: 2000
                 };
-                this.messageSnackbar.show(data);
+                passwordr.messageSnackbar.show(data);
             }
             if (newPassword.length == 0) {
                 var data = {
                     message: 'Password is required',
                     timeout: 2000
                 };
-                this.messageSnackbar.show(data);
+                passwordr.messageSnackbar.show(data);
             }
         }
     }
@@ -267,8 +340,7 @@ Passwordr.prototype.deletePassword = function(key) {
     if (this.checkSignedIn()) {
         var passwordr = this;
 
-        this.passwordsRef.child(key).remove()
-        .then(function() {
+        this.database.collection("passwords").doc(key).delete().then(function() {
             var data = {
                 message: 'Remove succeeded.',
                 timeout: 2000
@@ -361,35 +433,48 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     newDeleteBtn.addEventListener('click', this.deletePassword.bind(this, key));
 }
 
-// Remove a password from the UI
-Passwordr.prototype.removePassword = function(key) {
-    var div = document.getElementById(key);
-    div.parentNode.removeChild(div);
-}
-
 // Loads passwords
 Passwordr.prototype.loadPasswords = function() {
-    // Reference to the /users/{$uid}/ database path
-    this.passwordsRef = this.database.ref('users/' + this.auth.currentUser.uid + '/');
-    // Remove all previous listeners
-    this.passwordsRef.off();
+    // get master password
+    if (this.masterPassword == null) {
+        var data = {
+            message: "Please enter your master password.",
+            timeout: 2000
+        };
+        this.messageSnackbar.show(data);
 
-    // Load passwords
-    var setPassword = function(data) {
-        var val = data.val();
-        this.displayPassword(data.key, val.name, val.url, val.password, val.note);
-    }.bind(this);
-
-    var passwordr = this;
-
-    var removePassword = function(data) {
-        var val = data.val();
-        passwordr.removePassword(data.key);
+        passwordr.masterPasswordDialog.show();
     }
 
-    this.passwordsRef.on('child_added', setPassword);
-    this.passwordsRef.on('child_changed', setPassword);
-    this.passwordsRef.on('child_removed', removePassword);
+    this.newPasswordButton.removeAttribute('disabled');
+
+    // Reference to the /users/{$uid}/ database path
+    this.passwordsRef = this.database.collection("passwords");/*ref('users/' + this.auth.currentUser.uid + '/passwords');*/
+    
+    // Remove old snapshot listener
+    var unsubscribe = this.passwordsRef.onSnapshot(function () {});
+    unsubscribe();
+        
+    // Change handlers
+    var setPassword = function(data) {
+        var val = data.data();
+        this.displayPassword(data.id, val.name, val.url, val.password, val.note);
+    }.bind(this);
+
+    var removePasswordFromUI = function(data) {
+        var div = document.getElementById(data.id);
+        div.parentNode.removeChild(div);
+    }.bind(this);
+
+    this.passwordsRef.onSnapshot(function (snapshot) {
+        snapshot.docChanges.forEach(function(change) {
+            if (change.type === 'added' || change.type === 'modified') {
+                setPassword(change.doc);
+            } else if (change.type === 'removed') {
+                removePasswordFromUI(change.doc);
+            }
+        });
+    });
 };
 
 // Triggers when the user signs in or signs out

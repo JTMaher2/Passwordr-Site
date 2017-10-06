@@ -52,6 +52,35 @@
                 <button type="button" class="mdc-snackbar__action-button"></button>
                 </div>
             </div>
+            <aside id="master-password-dialog"
+                class="mdc-dialog"
+                role="alertdialog"
+                aria-labelledby="my-mdc-dialog-label"
+                aria-describedby="my-mdc-dialog-description">
+                <div class="mdc-dialog__surface">
+                    <header class="mdc-dialog__header">
+                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                            Master Password
+                        </h2>
+                    </header>
+                    <section class="mdc-dialog__body mdc-dialog__body--scrollable">
+                        <div class="mdc-textfield">
+                            <input type="text" id="master-password" class="mdc-textfield__input" required>
+                            <label class="mdc-textfield__label" for="master-password">Master Password</label>                            
+                            <div class="mdc-textfield__bottom-line"></div>
+                        </div><br/>
+                        <div class="mdc-textfield">
+                            <input type="text" id="confirm-master-password" class="mdc-textfield__input">
+                            <label class="mdc-textfield__label" for="confirm-master-password">Confirm Master Password</label>                            
+                            <div class="mdc-textfield__bottom-line"></div>
+                        </div><br/>
+                    </section>
+                    <footer class="mdc-dialog__footer">
+                        <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
+                    </footer>
+                </div>
+                <div class="mdc-dialog__backdrop"></div>
+            </aside>
             <aside id="new-password-dialog"
                 class="mdc-dialog"
                 role="alertdialog"
@@ -106,7 +135,9 @@
         
         <script src="https://unpkg.com/material-components-web@0.20.0/dist/material-components-web.min.js"></script>
         <script>window.mdc.autoInit();</script>
-        <script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-firestore.js"></script>
         <script>
           // Initialize Firebase
           var config = {

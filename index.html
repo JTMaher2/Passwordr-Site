@@ -49,7 +49,7 @@
                  aria-hidden="true">
                 <div class="mdc-snackbar__text"></div>
                 <div class="mdc-snackbar__action-wrapper">
-                <button type="button" class="mdc-snackbar__action-button"></button>
+                    <button type="button" class="mdc-snackbar__action-button">OK</button>
                 </div>
             </div>
             <aside id="master-password-dialog"
@@ -60,20 +60,14 @@
                 <div class="mdc-dialog__surface">
                     <header class="mdc-dialog__header">
                         <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Master Password
+                            Enter Master Password
                         </h2>
                     </header>
-                    <section class="mdc-dialog__body mdc-dialog__body--scrollable">
-                        <div class="mdc-textfield">
-                            <input type="text" id="master-password" class="mdc-textfield__input" required>
-                            <label class="mdc-textfield__label" for="master-password">Master Password</label>                            
+                    <section class="mdc-dialog__body mdc-dialog__body">
+                        <div class="mdc-textfield mdc-textfield--fullwidth">
+                            <input type="password" id="master-password" class="mdc-textfield__input" required>
                             <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
-                        <div class="mdc-textfield">
-                            <input type="text" id="confirm-master-password" class="mdc-textfield__input">
-                            <label class="mdc-textfield__label" for="confirm-master-password">Confirm Master Password</label>                            
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
+                        </div>
                     </section>
                     <footer class="mdc-dialog__footer">
                         <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
@@ -94,33 +88,28 @@
                     </header>
                     <section class="mdc-dialog__body mdc-dialog__body--scrollable">
                         <div class="mdc-textfield">
+                            Name:
                             <input type="text" id="add-name-input" class="mdc-textfield__input" aria-controls="name-validation-msg" required>
-                            <label class="mdc-textfield__label" for="add-name-input">Name</label>                            
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
-                        <p class="mdc-textfield-helptext
-                                    mdc-textfield-helptext--validation-msg"
-                            id="name-validation-msg">
-                            You must specify the site or service for this password.
-                        </p>
-                        <div class="mdc-textfield">
-                            <input type="text" id="add-url-input" class="mdc-textfield__input">
-                            <label class="mdc-textfield__label" for="add-url-input">URL</label>                            
                             <div class="mdc-textfield__bottom-line"></div>
                         </div><br/>
                         <div class="mdc-textfield">
+                            Password:
                             <input type="password" id="add-password-input" class="mdc-textfield__input" required>
-                            <label class="mdc-textfield__label" for="add-password-input">Password</label>                            
                             <div class="mdc-textfield__bottom-line"></div>
                         </div><br/>
                         <div class="mdc-textfield">
+                            Confirm:
                             <input type="password" id="add-confirm-password-input" class="mdc-textfield__input" required>
-                            <label class="mdc-textfield__label" for="add-confirm-password-input">Confirm Password</label>                            
                             <div class="mdc-textfield__bottom-line"></div>
                         </div><br/>
                         <div class="mdc-textfield">
+                            URL (optional):
+                            <input type="text" id="add-url-input" class="mdc-textfield__input">
+                            <div class="mdc-textfield__bottom-line"></div>
+                        </div><br/>
+                        <div class="mdc-textfield">
+                            Note (optional):
                             <input type="text" id="add-note-input" class="mdc-textfield__input">
-                            <label class="mdc-textfield__label" for="add-note-input">Note</label>
                             <div class="mdc-textfield__bottom-line"></div>
                         </div>
                     </section>

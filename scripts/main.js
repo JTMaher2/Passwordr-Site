@@ -34,8 +34,11 @@ function Passwordr() {
         passwordr.newPasswordDialog.show();
     });
 
+    this.encoder = new TextEncoder();
+    this.decoder = new TextDecoder();
+
     this.initFirebase();
-}
+};
 
 // Checks that the Firebase SDK has been correctly setup and configured
 Passwordr.prototype.checkSetup = function() {
@@ -70,91 +73,161 @@ Passwordr.prototype.signOut = function() {
     this.auth.signOut();
 };
 
-// Convert the user's ID to a key
-Passwordr.prototype.convertUIDToKey = function(uid) {
-    return new Promise(convert => {
-        var passwordr = this;
-        window.crypto.subtle.importKey(
-            "raw",
-            new TextEncoder("utf-8").encode("Y0zt37HgOx-6ec4d2c8a6993a98ac565f84a32d773f"),
-            {
-                // algorithm
-                name: "AES-GCM",
-            },
-            false, // not extractable
-            ["encrypt", "decrypt"] //can "encrypt", "decrypt", "wrapKey", or "unwrapKey"
-        )
-        .then(function(key){
-            // return the symmetric key
-            return key;
-        })
-        .catch(function(err){
-            var data = {
-                message: 'Key generation error: ' + err,
-                timeout: 2000
-            };
-            passwordr.messageSnackbar.show(data);
-        });
-    });
+// used for password generation
+Passwordr.prototype.getRandomInt = function (min, max) {
+    // Create byte array and fill with 1 random number
+    var byteArray = new Uint8Array(1);
+    window.crypto.getRandomValues(byteArray);
+
+    var range = max - min + 1;
+    var max_range = 256;
+    if (byteArray[0] >= Math.floor(max_range / range) * range)
+        return getRandomInt(min, max);
+    return min + (byteArray[0] % range);
+};
+
+// Encode a unicode string to base-64
+Passwordr.prototype.b64EncodeUnicode = function(string) {
+    return btoa(encodeURIComponent(string).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+    }));
 };
 
 // Encrypt a string using AES-GCM
-// Passwordr.prototype.encrypt = function(data) {
-//     var passwordr = this;
-//     var cryptoKey = await passwordr.convertUIDToKey(passwordr.auth.currentUser.uid)
-//     window.crypto.subtle.encrypt(
-//         {
-//             name: "AES-GCM",
+Passwordr.prototype.encrypt = function(name, url, password, note) {
+    var passwordr = this;
+    
+    // name
+    var nameIV = window.crypto.getRandomValues(new Uint8Array(12));    
+    window.crypto.subtle.encrypt(
+        {
+            name: "AES-GCM",
 
-//             iv: window.crypto.getRandomValues(new Uint8Array(12)),
+            iv: nameIV,
 
-//             tagLength: 128,
-//         },
-//         cryptoKey,
-//         data
-//     )
-//     .then(function(encrypted){
-//         return new Uint8Array(encrypted);
-//     })
-//     .catch(function(err){
-//         var data = {
-//             message: 'Encryption error: ' + err,
-//             timeout: 2000
-//         };
-//         passwordr.messageSnackbar.show(data);
-//     });
-// }
+            tagLength: 128
+        },
+        passwordr.encryptionKey,
+        passwordr.encoder.encode(name).buffer
+    ).then(function(encryptedName) {
+        // URL
+        var urlIV = window.crypto.getRandomValues(new Uint8Array(12));
+        window.crypto.subtle.encrypt(
+            {
+                name: "AES-GCM",
+    
+                iv: urlIV,
+    
+                tagLength: 128
+            },
+            passwordr.encryptionKey,
+            passwordr.encoder.encode(url).buffer
+        ).then(function(encryptedUrl) {
+            // password
+            var passwordIV = window.crypto.getRandomValues(new Uint8Array(12));            
+            window.crypto.subtle.encrypt(
+                {
+                    name: "AES-GCM",
+        
+                    iv: passwordIV,
+        
+                    tagLength: 128
+                },
+                passwordr.encryptionKey,
+                passwordr.encoder.encode(password).buffer
+            ).then(function(encryptedPassword) {
+                // note
+                var noteIV = window.crypto.getRandomValues(new Uint8Array(12));                
+                window.crypto.subtle.encrypt(
+                    {
+                        name: "AES-GCM",
+            
+                        iv: noteIV,
+            
+                        tagLength: 128
+                    },
+                    passwordr.encryptionKey,
+                    passwordr.encoder.encode(note).buffer
+                ).then(function(encryptedNote) {
+                    // update Firebase
+                    passwordr.passwordsRef.add({
+                        name: passwordr.b64EncodeUnicode(passwordr.decoder.decode(nameIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedName)),
+                        url: passwordr.b64EncodeUnicode(passwordr.decoder.decode(urlIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedUrl)),
+                        password: passwordr.b64EncodeUnicode(passwordr.decoder.decode(passwordIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedPassword)),
+                        note: passwordr.b64EncodeUnicode(passwordr.decoder.decode(noteIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedNote)),
+                        userid: passwordr.auth.currentUser.uid
+                    }).catch(function(error) {
+                        var data = {
+                            message: 'Error adding password: ' + error,
+                            timeout: 2000,
+                            actionText: 'OK',
+                            actionHandler: function() {
+                            }
+                        };
+                        passwordr.messageSnackbar.show(data);
+                    });
+                }).catch(function(error) {
+                    var data = {
+                        message: 'Error encrypting note: ' + error,
+                        timeout: 2000,
+                        actionText: 'OK',
+                        actionHandler: function() {
+                        }
+                    };
+                    passwordr.messageSnackbar.show(data);
+                });
+            }).catch(function(error) {
+                var data = {
+                    message: 'Error encrypting password: ' + error,
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                passwordr.messageSnackbar.show(data);
+            });
+
+        }).catch(function(err) {
+            var data = {
+                message: 'Error encrypting URL: ' + err,
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
+            };
+            passwordr.messageSnackbar.show(data);
+        });
+    }).catch(function(err) {
+        var data = {
+            message: 'Error encrypting name: ' + error,
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+            }
+        };
+        passwordr.messageSnackbar.show(data);
+    });
+};
 
 // Add a new password to the database
 Passwordr.prototype.newPassword = function() {
     if (this.checkSignedIn()) {
-        var name = /*this.encrypt(*/document.getElementById('add-name-input').value/*)*/;
-        var url = /*this.encrypt(*/document.getElementById('add-url-input').value/*)*/;
+        var name = document.getElementById('add-name-input').value;
+        var url = document.getElementById('add-url-input').value;
         var password = document.getElementById('add-password-input').value;
         var confirmPassword = document.getElementById('add-confirm-password-input').value;
-        var note = /*this.encrypt(*/document.getElementById('add-note-input').value/*)*/;
-
+        var note = document.getElementById('add-note-input').value;
+        
         if (password == confirmPassword) {
-            password = /*this.encrypt(*/password/*)*/;
-
-            // update Firebase
-            this.passwordsRef.add({
-                name: name,
-                url: url,
-                password: password,
-                note: note,
-                userid: this.auth.currentUser.uid
-            }).catch(function(error) {
-                var data = {
-                    message: 'Error adding password: ' + error,
-                    timeout: 2000
-                };
-                this.messageSnackbar.show(data);
-            });
+            this.encrypt(name, url, password, note);
         } else {
             var data = {
                 message: 'Password must match confirm password',
-                timeout: 2000
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
             };
             this.messageSnackbar.show(data);
         }
@@ -162,9 +235,62 @@ Passwordr.prototype.newPassword = function() {
 };
 
 Passwordr.prototype.setMasterPassword = function() {
-    if ($('.master-password').val() != '' && $('.master-password').val() === $('.confirm-master-password').val()) {
-        this.masterPassword = $('.master-password').val();
-        $('.master-password-dialog').remove();
+    var passwordr = this;
+
+    if ($('#master-password').val() != null) {
+        this.encryptionKey = window.crypto.subtle.importKey(
+            'raw',
+            passwordr.encoder.encode($('#master-password').val()).buffer,
+            'HKDF',
+            false,
+            ['deriveKey']
+        ).then(function(key) {
+            window.crypto.subtle.deriveKey(
+                {
+                    name: 'HKDF',
+                    salt: new Uint8Array(),
+                    info: passwordr.encoder.encode('encryption').buffer,
+                    hash: 'SHA-256'
+                },
+                key,
+                {
+                    name: 'AES-GCM',
+                    length: 128
+                },
+                false,
+                ['encrypt', 'decrypt']
+            ).then(function(derived) {
+                passwordr.encryptionKey = derived;
+            }).catch(function(err) {
+                var data = {
+                    message: 'Derivation error: ' + err,
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                passwordr.messageSnackbar.show(data);
+            });
+        }).catch(function(err) {
+            var data = {
+                message: 'Import error: ' + err,
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
+            };
+            passwordr.messageSnackbar.show(data);
+        });
+    } else {
+        var data = {
+            message: 'Please provide a master password.',
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+                passwordr.masterPasswordDialog.show();
+            }
+        };
+        this.messageSnackbar.show(data);
     }
 };
 
@@ -191,11 +317,45 @@ Passwordr.TEXTFIELD_TEMPLATE =
   '<div class="mdc-textfield__bottom-line"></div>' +
 '</div>'
 
-// Show a password
+// Decode a base64 encoded unicode string
+Passwordr.prototype.b64DecodeUnicode = function(str) {
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+};
+
+// Decrypt and reveal an encrypted and hidden password
 Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
-    passwordSection.removeAttribute('hidden');
-    revealBtn.setAttribute('disabled', 'true');
-}
+    var passwordr = this;
+
+    window.crypto.subtle.decrypt(
+        {
+            name: "AES-GCM",
+            // IV is up to 40 characters before first space
+            iv: passwordr.encoder.encode(passwordr.b64DecodeUnicode(passwordSection.textContent.substring(0, passwordSection.textContent.indexOf(' ')))).buffer,
+            tagLength: 128
+        },
+        passwordr.encryptionKey,
+        // password is all characters after the space
+        passwordr.encoder.encode(passwordr.b64DecodeUnicode(passwordSection.textContent.substring(passwordSection.textContent.indexOf(' ') + 1))).buffer
+    )
+    .then(function(decrypted) {
+        passwordSection.textContent = passwordr.decoder.decode(decrypted);
+        passwordSection.removeAttribute('hidden');
+        revealBtn.disabled = true;
+    })
+    .catch(function(err) {
+        var data = {
+            message: 'Decryption error: ' + err,
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+                passwordr.masterPasswordDialog.show();
+            }
+        };
+        passwordr.messageSnackbar.show(data);
+    });
+};
 
 // Returns true if user is signed-in. Otherwise false and displays a message.
 Passwordr.prototype.checkSignedIn = function() {
@@ -204,10 +364,12 @@ Passwordr.prototype.checkSignedIn = function() {
         return true;
     }
 
-    // Display a message to the user using a Toast.
     var data = {
         message: 'You must sign in first',
-        timeout: 2000
+        timeout: 2000,
+        actionText: 'OK',
+        actionHandler: function() {
+        }
     };
     this.messageSnackbar.show(data);
     return false;
@@ -257,7 +419,10 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
             .catch(function(error) {
                 var data = {
                     message: 'Error saving password: ' + error,
-                    timeout: 2000
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
                 };
                 passwordr.messageSnackbar.show(data);
             });
@@ -265,20 +430,26 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
             if (newName.length == 0) {
                 var data = {
                     message: 'Name is required',
-                    timeout: 2000
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
                 };
                 passwordr.messageSnackbar.show(data);
             }
             if (newPassword.length == 0) {
                 var data = {
                     message: 'Password is required',
-                    timeout: 2000
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
                 };
                 passwordr.messageSnackbar.show(data);
             }
         }
     }
-}
+};
 
 // Edit a password
 Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSection, noteSection, editBtn, revealBtn, key) {
@@ -333,7 +504,7 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
         editBtn.parentNode.replaceChild(newEditBtn, editBtn);
         newEditBtn.addEventListener('click', this.saveChanges.bind(this, newEditBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key));
     }
-}
+};
 
 // Delete a password
 Passwordr.prototype.deletePassword = function(key) {
@@ -343,7 +514,10 @@ Passwordr.prototype.deletePassword = function(key) {
         this.database.collection("passwords").doc(key).delete().then(function() {
             var data = {
                 message: 'Remove succeeded.',
-                timeout: 2000
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
             };
             passwordr.messageSnackbar.show(data);
             passwordr.loadPasswords();
@@ -351,12 +525,15 @@ Passwordr.prototype.deletePassword = function(key) {
         .catch(function(error) {
             var data = {
                 message: "Remove failed: " + error.message,
-                timeout: 2000
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
             };
             passwordr.messageSnackbar.show(data);
         });
     }   
-}
+};
 
 // Display a password in the UI
 Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
@@ -431,21 +608,10 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     var newDeleteBtn = deleteBtn.cloneNode(true);
     deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
     newDeleteBtn.addEventListener('click', this.deletePassword.bind(this, key));
-}
+};
 
 // Loads passwords
 Passwordr.prototype.loadPasswords = function() {
-    // get master password
-    if (this.masterPassword == null) {
-        var data = {
-            message: "Please enter your master password.",
-            timeout: 2000
-        };
-        this.messageSnackbar.show(data);
-
-        passwordr.masterPasswordDialog.show();
-    }
-
     this.newPasswordButton.removeAttribute('disabled');
 
     // Reference to the /users/{$uid}/ database path
@@ -495,6 +661,9 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
 
         // Hide sign-in button
         this.signInButton.setAttribute('disabled', 'true');
+
+        // get master password
+        this.masterPasswordDialog.show();
 
         this.loadPasswords();
     } else { // User is signed out

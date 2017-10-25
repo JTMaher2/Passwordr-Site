@@ -11,12 +11,14 @@ function Passwordr() {
     this.passwordList = document.getElementById('passwords');    
     this.signInButton = document.getElementById('sign-in');
     this.signOutButton = document.getElementById('sign-out');
+    this.changeMasterPasswordButton = document.getElementById('change-master-password');    
     this.newPasswordButton = document.getElementById('new-password');      
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
     this.newPasswordDialog = new MDCDialog(document.getElementById('new-password-dialog'));
     this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
+    this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
     
     var passwordr = this;    
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
@@ -25,13 +27,20 @@ function Passwordr() {
     this.masterPasswordDialog.listen('MDCDialog:accept', function() {
         passwordr.setMasterPassword();
     });
+    this.changeMasterPasswordDialog.listen('MDCDialog:accept', function() {
+        passwordr.changeMasterPassword();
+    });
 
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
-
+    
     this.newPasswordButton.addEventListener('click', function (evt) {
         passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
         passwordr.newPasswordDialog.show();
+    });
+    this.changeMasterPasswordButton.addEventListener('click', function (evt) {
+        passwordr.changeMasterPasswordDialog.lastFocusedTarget = evt.target;
+        passwordr.changeMasterPasswordDialog.show();
     });
 
     this.encoder = new TextEncoder();
@@ -86,16 +95,21 @@ Passwordr.prototype.getRandomInt = function (min, max) {
     return min + (byteArray[0] % range);
 };
 
-// Encode a unicode string to base-64
-Passwordr.prototype.b64EncodeUnicode = function(string) {
-    return btoa(encodeURIComponent(string).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-    }));
-};
+// convert an ArrayBuffer into CSV format
+Passwordr.prototype.bufferToCSV = function(buffer, length) {
+    var csv = '';
+
+    for (var i = 0; i < length - 1; i++) {
+        csv += buffer[i] + ',';
+    }
+
+    csv += buffer[length - 1];
+
+    return csv;
+}
 
 // Encrypt a string using AES-GCM
-Passwordr.prototype.encrypt = function(name, url, password, note) {
+Passwordr.prototype.encrypt = function(name, url, password, note, key) {
     var passwordr = this;
     
     // name
@@ -149,24 +163,53 @@ Passwordr.prototype.encrypt = function(name, url, password, note) {
                     },
                     passwordr.encryptionKey,
                     passwordr.encoder.encode(note).buffer
-                ).then(function(encryptedNote) {
-                    // update Firebase
-                    passwordr.passwordsRef.add({
-                        name: passwordr.b64EncodeUnicode(passwordr.decoder.decode(nameIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedName)),
-                        url: passwordr.b64EncodeUnicode(passwordr.decoder.decode(urlIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedUrl)),
-                        password: passwordr.b64EncodeUnicode(passwordr.decoder.decode(passwordIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedPassword)),
-                        note: passwordr.b64EncodeUnicode(passwordr.decoder.decode(noteIV)) + ' ' + passwordr.b64EncodeUnicode(passwordr.decoder.decode(encryptedNote)),
-                        userid: passwordr.auth.currentUser.uid
-                    }).catch(function(error) {
-                        var data = {
-                            message: 'Error adding password: ' + error,
-                            timeout: 2000,
-                            actionText: 'OK',
-                            actionHandler: function() {
-                            }
-                        };
-                        passwordr.messageSnackbar.show(data);
-                    });
+                ).then(function(encryptedNote) {                    
+                    var encryptedEncodedName = new Uint8Array(encryptedName);
+                    var encryptedEncodedUrl = new Uint8Array(encryptedUrl);
+                    var encryptedEncodedPassword = new Uint8Array(encryptedPassword);
+                    var encryptedEncodedNote = new Uint8Array(encryptedNote);
+
+                    var nameWithIV = passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
+                    var urlWithIV = passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
+                    var passwordWithIV = passwordr.bufferToCSV(passwordIV, passwordIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedPassword, encryptedEncodedPassword.length);
+                    var noteWithIV = passwordr.bufferToCSV(noteIV, noteIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedNote, encryptedEncodedNote.length);
+
+                    // if this is a new password, there won't be a key
+                    if (key == null) {
+                        passwordr.passwordsRef.add({
+                            name: nameWithIV,
+                            url: urlWithIV,
+                            password: passwordWithIV,
+                            note: noteWithIV,
+                            userid: passwordr.auth.currentUser.uid
+                        }).catch(function(error) {
+                            var data = {
+                                message: 'Error adding password: ' + error,
+                                timeout: 2000,
+                                actionText: 'OK',
+                                actionHandler: function() {
+                                }
+                            };
+                            passwordr.messageSnackbar.show(data);
+                        });
+                    } else { // it's an existing password
+                        passwordr.passwordsRef.doc(key).update({
+                            name: nameWithIV,
+                            url: urlWithIV,
+                            password: passwordWithIV,
+                            note: noteWithIV
+                        })
+                        .catch(function(error) {
+                            var data = {
+                                message: 'Error modifying password: ' + error,
+                                timeout: 2000,
+                                actionText: 'OK',
+                                actionHandler: function() {
+                                }
+                            };
+                            passwordr.messageSnackbar.show(data);
+                        });
+                    }
                 }).catch(function(error) {
                     var data = {
                         message: 'Error encrypting note: ' + error,
@@ -220,7 +263,7 @@ Passwordr.prototype.newPassword = function() {
         var note = document.getElementById('add-note-input').value;
         
         if (password == confirmPassword) {
-            this.encrypt(name, url, password, note);
+            this.encrypt(name, url, password, note, null); // do not provide a key
         } else {
             var data = {
                 message: 'Password must match confirm password',
@@ -238,7 +281,7 @@ Passwordr.prototype.setMasterPassword = function() {
     var passwordr = this;
 
     if ($('#master-password').val() != null) {
-        this.encryptionKey = window.crypto.subtle.importKey(
+        window.crypto.subtle.importKey(
             'raw',
             passwordr.encoder.encode($('#master-password').val()).buffer,
             'HKDF',
@@ -261,6 +304,23 @@ Passwordr.prototype.setMasterPassword = function() {
                 ['encrypt', 'decrypt']
             ).then(function(derived) {
                 passwordr.encryptionKey = derived;
+
+                // decrypt and show all non-password fields
+                $('.password_template').each(function() {
+                    var current_password = $(this);
+
+                    var nameHeader = current_password.find('.name');                    
+                    passwordr.decryptCSV(nameHeader);
+                    nameHeader.prop('hidden', false);
+
+                    var urlHeader = current_password.find('.url');
+                    passwordr.decryptCSV(urlHeader);
+                    urlHeader.prop('hidden', false);
+
+                    var noteSection = current_password.find('.note');                    
+                    passwordr.decryptCSV(noteSection);
+                    noteSection.prop('hidden', false);  
+                });
             }).catch(function(err) {
                 var data = {
                     message: 'Derivation error: ' + err,
@@ -294,9 +354,109 @@ Passwordr.prototype.setMasterPassword = function() {
     }
 };
 
+// changes a user's master password
+Passwordr.prototype.changeMasterPassword = function() {
+    var passwordr = this;
+
+    var masterPassword = $('#new-master-password');
+    var confirmMasterPassword = $('#confirm-new-master-password');
+
+    if (masterPassword.val() != null) {
+        if (masterPassword.val() == confirmMasterPassword.val()) {
+            // first, all hidden passwords must be decrypted
+            $('.password_template').each(function() {
+                var password = $(this).find('.password');
+
+                if (password.attr('hidden')) {
+                    passwordr.decryptCSV(password);
+                }
+            }); 
+
+            window.crypto.subtle.importKey(
+                'raw',
+                passwordr.encoder.encode(masterPassword.val()).buffer,
+                'HKDF',
+                false,
+                ['deriveKey']
+            ).then(function(key) {
+                window.crypto.subtle.deriveKey(
+                    {
+                        name: 'HKDF',
+                        salt: new Uint8Array(),
+                        info: passwordr.encoder.encode('encryption').buffer,
+                        hash: 'SHA-256'
+                    },
+                    key,
+                    {
+                        name: 'AES-GCM',
+                        length: 128
+                    },
+                    false,
+                    ['encrypt', 'decrypt']
+                ).then(function(derived) {
+                    passwordr.encryptionKey = derived;
+                    
+                    // re-encrypt all fields
+                    $('.password_template').each(function() {
+                        var current_password = $(this);
+
+                        var nameHeader = current_password.find('.name');
+                        var urlHeader = current_password.find('.url'); 
+                        var noteSection = current_password.find('.note');
+                        var passwordSection = current_password.find('.password');
+
+                        // re-encrypt it
+                        passwordr.encrypt(nameHeader.text(), urlHeader.text(), passwordSection.text(), noteSection.text(), current_password.attr('id')); // the id is the key                  
+                    });
+
+                    window.location.reload(); // refresh the page
+                }).catch(function(err) {
+                    var data = {
+                        message: 'Derivation error: ' + err,
+                        timeout: 2000,
+                        actionText: 'OK',
+                        actionHandler: function() {
+                        }
+                    };
+                    passwordr.messageSnackbar.show(data);
+                });
+            }).catch(function(err) {
+                var data = {
+                    message: 'Import error: ' + err,
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                passwordr.messageSnackbar.show(data);
+            });
+        } else {
+            var data = {
+                message: 'Password and confirm password must match.',
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                    passwordr.changeMasterPasswordDialog.show();
+                }
+            };
+            this.messageSnackbar.show(data);
+        }
+    } else {
+        var data = {
+            message: 'Please provide a master password.',
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+                passwordr.changeMasterPasswordDialog.show();
+            }
+        };
+        this.messageSnackbar.show(data);
+    }
+};
+
 // Template for passwords
 Passwordr.PASSWORD_TEMPLATE =
-'<div class="mdc-card">' +
+'<div class="mdc-card password_template">' +
     '<section class="mdc-card__primary">' +
         '<h1 class="name mdc-card__title mdc-card__title--large"></h1>' +
         '<h2 class="url mdc-card__subtitle"></h2>' +
@@ -317,32 +477,44 @@ Passwordr.TEXTFIELD_TEMPLATE =
   '<div class="mdc-textfield__bottom-line"></div>' +
 '</div>'
 
-// Decode a base64 encoded unicode string
-Passwordr.prototype.b64DecodeUnicode = function(str) {
-    return decodeURIComponent(atob(str).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-};
-
-// Decrypt and reveal an encrypted and hidden password
-Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
+// Decrypts a CSV field, and updates the specified element with the decrypted data
+Passwordr.prototype.decryptCSV = function(elem) {
+    const ivLen = 12;
+    var iv = new Uint8Array(ivLen);
     var passwordr = this;
+    if (elem.textContent != null) { // no jQuery
+        var csv = elem.textContent.split(',');        
+    } else { // using jQuery
+        var csv = elem.text().split(',');
+    }
+
+    for (var i = 0; i < ivLen; i++) {
+        iv[i] = csv[i];
+    }
+
+    var data = new Uint8Array(csv.length - ivLen);
+
+    var dataIndex = 0;
+    for (var i = ivLen; i < csv.length; i++) {
+        data[dataIndex] = csv[i];
+        dataIndex++;
+    }
 
     window.crypto.subtle.decrypt(
         {
             name: "AES-GCM",
-            // IV is up to 40 characters before first space
-            iv: passwordr.encoder.encode(passwordr.b64DecodeUnicode(passwordSection.textContent.substring(0, passwordSection.textContent.indexOf(' ')))).buffer,
+            iv: iv,
             tagLength: 128
         },
         passwordr.encryptionKey,
-        // password is all characters after the space
-        passwordr.encoder.encode(passwordr.b64DecodeUnicode(passwordSection.textContent.substring(passwordSection.textContent.indexOf(' ') + 1))).buffer
+        data
     )
     .then(function(decrypted) {
-        passwordSection.textContent = passwordr.decoder.decode(decrypted);
-        passwordSection.removeAttribute('hidden');
-        revealBtn.disabled = true;
+        if (elem.textContent != null) { // no jQuery
+            elem.textContent = passwordr.decoder.decode(decrypted);            
+        } else { // jQuery
+            elem.text(passwordr.decoder.decode(decrypted));                        
+        }
     })
     .catch(function(err) {
         var data = {
@@ -350,11 +522,17 @@ Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
             timeout: 2000,
             actionText: 'OK',
             actionHandler: function() {
-                passwordr.masterPasswordDialog.show();
             }
         };
         passwordr.messageSnackbar.show(data);
     });
+};
+
+// Reveals a hidden password
+Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
+    this.decryptCSV(passwordSection);
+    passwordSection.hidden = false;
+    revealBtn.disabled = true;
 };
 
 // Returns true if user is signed-in. Otherwise false and displays a message.
@@ -394,7 +572,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
 
         passwordSection.removeChild(passwordSection.firstChild);
         passwordSection.textContent = newPassword;
-        passwordSection.setAttribute('hidden', 'true'); // hide the password
+        passwordSection.setAttribute('hidden', true); // hide the password
         noteSection.removeChild(noteSection.firstChild);
         noteSection.textContent = newNote;
 
@@ -407,25 +585,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
         // Check that the user entered at least a name and password, and that the user is signed in
         if (newName.length > 0 && newPassword.length > 0 && this.checkSignedIn()) {
             // update Firebase
-            this.passwordsRef.doc(key).update({
-                name: newName,
-                url: newUrl,
-                password: newPassword,
-                note: newNote
-            })
-            .then(function() {
-                passwordr.displayPassword(key, newName, newUrl, newPassword, newNote);           
-            })
-            .catch(function(error) {
-                var data = {
-                    message: 'Error saving password: ' + error,
-                    timeout: 2000,
-                    actionText: 'OK',
-                    actionHandler: function() {
-                    }
-                };
-                passwordr.messageSnackbar.show(data);
-            });
+            passwordr.encrypt(newName, newUrl, newPassword, newNote, key);
         } else {
             if (newName.length == 0) {
                 var data = {
@@ -454,7 +614,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
 // Edit a password
 Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSection, noteSection, editBtn, revealBtn, key) {
     editBtn.textContent = "Done";
-    revealBtn.setAttribute('disabled', 'true'); // disable reveal button while in edit mode
+    revealBtn.setAttribute('disabled', true); // disable reveal button while in edit mode
 
     // make name header editable
     var nameTextfield = document.createElement('div');
@@ -575,12 +735,29 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
         primarySection.appendChild(urlHeader);        
     }
 
-    // populate fields
-    nameHeader.textContent = name;
-    urlHeader.textContent = url;
+    // hide password until user clicks "Show"
     passwordSection.textContent = password;
-    passwordSection.setAttribute('hidden', 'true'); // hide password text
-    noteSection.textContent = note;
+    passwordSection.hidden = true;
+
+    if (this.encryptionKey != null) {
+        // encryption key exists, so show fields
+        nameHeader.textContent = name;
+        this.decryptCSV(nameHeader);
+        nameHeader.hidden = false;
+        urlHeader.textContent = url;
+        this.decryptCSV(urlHeader);
+        urlHeader.hidden = false;
+        noteSection.textContent = note;
+        this.decryptCSV(noteSection);
+        noteSection.hidden = false;
+    } else { // the page just loaded, so do the revealing in setMasterPassword
+        nameHeader.textContent = name;
+        nameHeader.hidden = true;
+        urlHeader.textContent = url;
+        urlHeader.hidden = true;
+        noteSection.textContent = note;
+        noteSection.hidden = true;
+    }
 
     // add event handlers to buttons
     var revealBtn = div.querySelector('.reveal');
@@ -660,7 +837,7 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
         this.signOutButton.removeAttribute('disabled');
 
         // Hide sign-in button
-        this.signInButton.setAttribute('disabled', 'true');
+        this.signInButton.setAttribute('disabled', true);
 
         // get master password
         this.masterPasswordDialog.show();
@@ -668,9 +845,9 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
         this.loadPasswords();
     } else { // User is signed out
         // Hide user's profile, and disable sign-out button
-        this.userName.setAttribute('hidden', 'true');
+        this.userName.setAttribute('hidden', true);
         this.userPic.removeAttribute('src');
-        this.signOutButton.setAttribute('disabled', 'true');
+        this.signOutButton.setAttribute('disabled', true);
     
         // Enable sign-in button
         this.signInButton.removeAttribute('disabled');

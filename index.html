@@ -6,7 +6,7 @@
         <title>Passwordr</title>
         <link
             rel="stylesheet"
-            href="https://unpkg.com/material-components-web@0.20.0/dist/material-components-web.min.css">
+            href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
         <style>
             :root {
                 --mdc-theme-primary: #0e4ead;
@@ -34,6 +34,7 @@
                 <section class="mdc-card__actions">
                     <button id="sign-in" class="mdc-button mdc-button--compact mdc-card__action">Sign in</button>
                     <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
+                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>                    
                 </section>
             </div>
         </header>
@@ -66,6 +67,35 @@
                     <section class="mdc-dialog__body mdc-dialog__body">
                         <div class="mdc-textfield mdc-textfield--fullwidth">
                             <input type="password" id="master-password" class="mdc-textfield__input" required>
+                            <div class="mdc-textfield__bottom-line"></div>
+                        </div>
+                    </section>
+                    <footer class="mdc-dialog__footer">
+                        <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
+                    </footer>
+                </div>
+                <div class="mdc-dialog__backdrop"></div>
+            </aside>
+            <aside id="change-master-password-dialog"
+                class="mdc-dialog"
+                role="alertdialog"
+                aria-labelledby="my-mdc-dialog-label"
+                aria-describedby="my-mdc-dialog-description">
+                <div class="mdc-dialog__surface">
+                    <header class="mdc-dialog__header">
+                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                            Change Master Password
+                        </h2>
+                    </header>
+                    <section class="mdc-dialog__body mdc-dialog__body">
+                        <div class="mdc-textfield mdc-textfield--fullwidth">
+                            New Password:
+                            <input type="password" id="new-master-password" class="mdc-textfield__input" required>
+                            <div class="mdc-textfield__bottom-line"></div>
+                        </div>
+                        <div class="mdc-textfield mdc-textfield--fullwidth">
+                            Confirm:
+                            <input type="password" id="confirm-new-master-password" class="mdc-textfield__input" required>
                             <div class="mdc-textfield__bottom-line"></div>
                         </div>
                     </section>
@@ -122,7 +152,7 @@
             </aside>
         </main>
         
-        <script src="https://unpkg.com/material-components-web@0.20.0/dist/material-components-web.min.js"></script>
+        <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
         <script>window.mdc.autoInit();</script>
         <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-auth.js"></script>

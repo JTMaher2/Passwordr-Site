@@ -11,14 +11,19 @@ function Passwordr() {
     this.passwordList = document.getElementById('passwords');    
     this.signInButton = document.getElementById('sign-in');
     this.signOutButton = document.getElementById('sign-out');
-    this.changeMasterPasswordButton = document.getElementById('change-master-password');    
-    this.newPasswordButton = document.getElementById('new-password');      
+    this.changeMasterPasswordButton = document.getElementById('change-master-password');
+    this.importExportDataButton = document.getElementById('import-export-data-button');  
+    this.importXMLButton = document.getElementById('import-xml-button');
+    this.exportXMLButton = document.getElementById('export-xml-button');
+    this.newPasswordButton = document.getElementById('new-password');
+    this.generatePasswordButton = document.getElementById('generate-password-button');
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
     this.newPasswordDialog = new MDCDialog(document.getElementById('new-password-dialog'));
     this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
     this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
+    this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     
     var passwordr = this;    
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
@@ -33,16 +38,24 @@ function Passwordr() {
 
     this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
-    
-    this.newPasswordButton.addEventListener('click', function (evt) {
-        passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
-        passwordr.newPasswordDialog.show();
-    });
     this.changeMasterPasswordButton.addEventListener('click', function (evt) {
         passwordr.changeMasterPasswordDialog.lastFocusedTarget = evt.target;
         passwordr.changeMasterPasswordDialog.show();
     });
+    this.importExportDataButton.addEventListener('click', function (evt) {
+        passwordr.importExportDataDialog.lastFocusedTarget = evt.target;
+        passwordr.importExportDataDialog.show();
+    });
 
+    this.newPasswordButton.addEventListener('click', function (evt) {
+        passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
+        passwordr.newPasswordDialog.show();
+    });
+
+    this.generatePasswordButton.addEventListener('click', this.generatePassword.bind(this));
+    this.importXMLButton.addEventListener('click', this.importXML.bind(this));
+    this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
+    
     this.encoder = new TextEncoder();
     this.decoder = new TextDecoder();
 
@@ -82,17 +95,30 @@ Passwordr.prototype.signOut = function() {
     this.auth.signOut();
 };
 
-// used for password generation
-Passwordr.prototype.getRandomInt = function (min, max) {
-    // Create byte array and fill with 1 random number
-    var byteArray = new Uint8Array(1);
-    window.crypto.getRandomValues(byteArray);
-
-    var range = max - min + 1;
-    var max_range = 256;
-    if (byteArray[0] >= Math.floor(max_range / range) * range)
-        return getRandomInt(min, max);
-    return min + (byteArray[0] % range);
+// generates a random password (credit to hajikelist on StackOverflow)
+Passwordr.prototype.generatePassword = function () {
+    const length = 20;
+    var string = "abcdefghijklmnopqrstuvwxyz"; //to upper 
+    var numeric = '0123456789';
+    var punctuation = '!@#$%^&*()_+~`|}{[]\:;?><,./-=';
+    var password = "";
+    var character = "";
+    var crunch = true;
+    while( password.length<length ) {
+        var entity1 = Math.ceil(string.length * Math.random()*Math.random());
+        var entity2 = Math.ceil(numeric.length * Math.random()*Math.random());
+        var entity3 = Math.ceil(punctuation.length * Math.random()*Math.random());
+        var hold = string.charAt( entity1 );
+        hold = (entity1%2==0)?(hold.toUpperCase()):(hold);
+        character += hold;
+        character += numeric.charAt( entity2 );
+        character += punctuation.charAt( entity3 );
+        password = character;
+    }
+    
+    // populate the password and confirm password fields with the random password
+    $('#add-password-input').val(password);
+    $('#add-confirm-password-input').val(password);
 };
 
 // convert an ArrayBuffer into CSV format
@@ -452,6 +478,49 @@ Passwordr.prototype.changeMasterPassword = function() {
         };
         this.messageSnackbar.show(data);
     }
+};
+
+// import data from an XML file
+Passwordr.prototype.importXML = function() {
+    // allow user to upload XML file
+
+    // parse the XML file
+
+    // if successfully parsed, load data into Firestore
+
+    // if error, show snackbar containing error message
+};
+
+// export data to an XML file
+Passwordr.prototype.exportXML = function() {
+    // create DOM tree
+    var doc = document.implementation.createDocument("", "", null);
+    var passwordsElem = doc.createElement("passwords");
+    
+    $('.password_template').each(function() {
+        // if password is encrypted, decrypt it
+        var password = $(this).find('.password');
+
+        if (password.attr('hidden')) {
+            passwordr.decryptCSV(password);
+        }
+
+        var passwordElem = doc.createElement("password");
+        passwordElem.setAttribute("name", $(this).find('.name').text());
+        passwordElem.setAttribute("url", $(this).find('.url').text());
+        passwordElem.setAttribute("password", password.text());
+        passwordElem.setAttribute("note", $(this).find('.note').text());
+        passwordsElem.appendChild(passwordElem);
+        doc.appendChild(passwordsElem);
+    });
+
+    // serialize to XML
+    var oSerializer = new XMLSerializer();
+    var sXML = oSerializer.serializeToString(doc);
+
+    var downloadLink = document.createElement('a');
+    downloadLink.setAttribute('href', '#');
+    downloadLink.setAttribute('download', '')
 };
 
 // Template for passwords

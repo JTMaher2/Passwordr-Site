@@ -34,7 +34,8 @@
                 <section class="mdc-card__actions">
                     <button id="sign-in" class="mdc-button mdc-button--compact mdc-card__action">Sign in</button>
                     <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
-                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>                    
+                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
+                    <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
                 </section>
             </div>
         </header>
@@ -126,7 +127,9 @@
                             Password:
                             <input type="password" id="add-password-input" class="mdc-textfield__input" required>
                             <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
+                        </div>
+                        <button type="button" id="generate-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
+                        <br/>
                         <div class="mdc-textfield">
                             Confirm:
                             <input type="password" id="add-confirm-password-input" class="mdc-textfield__input" required>
@@ -146,6 +149,26 @@
                     <footer class="mdc-dialog__footer">
                         <button type="button" id="cancel-add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Cancel</button>
                         <button type="button" id="add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Add</button>
+                    </footer>
+                </div>
+                <div class="mdc-dialog__backdrop"></div>
+            </aside>
+            <aside id="import-export-data-dialog"
+                class="mdc-dialog"
+                role="alertdialog"
+                aria-labelledby="my-mdc-dialog-label"
+                aria-describedby="my-mdc-dialog-description">
+                <div class="mdc-dialog__surface">
+                    <header class="mdc-dialog__header">
+                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                            Import/Export Data
+                        </h2>
+                    </header>
+                    <section class="mdc-dialog__body mdc-dialog__body">
+                        <button type="button" id="import-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import XML</button>
+                        <button type="button" id="export-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export XML</button>                        
+                    </section>
+                    <footer class="mdc-dialog__footer">
                     </footer>
                 </div>
                 <div class="mdc-dialog__backdrop"></div>

@@ -14,7 +14,7 @@ function Passwordr() {
     this.changeMasterPasswordButton = document.getElementById('change-master-password');
     this.importExportDataButton = document.getElementById('import-export-data-button');  
     this.importXMLButton = document.getElementById('import-xml-button');
-    this.exportXMLButton = document.getElementById('export-xml-button');
+    this.exportXMLButton = document.getElementById('export-xml-button');    
     this.newPasswordButton = document.getElementById('new-password');
     this.generatePasswordButton = document.getElementById('generate-password-button');
     this.userPic = document.getElementById('user-pic');    
@@ -95,7 +95,7 @@ Passwordr.prototype.signOut = function() {
     this.auth.signOut();
 };
 
-// generates a random password (credit to hajikelist on StackOverflow)
+// generates a random password
 Passwordr.prototype.generatePassword = function () {
     const length = 20;
     var string = "abcdefghijklmnopqrstuvwxyz"; //to upper 
@@ -331,7 +331,7 @@ Passwordr.prototype.setMasterPassword = function() {
             ).then(function(derived) {
                 passwordr.encryptionKey = derived;
 
-                // decrypt and show all non-password fields
+                // decrypt and show all fields
                 $('.password_template').each(function() {
                     var current_password = $(this);
 
@@ -342,6 +342,10 @@ Passwordr.prototype.setMasterPassword = function() {
                     var urlHeader = current_password.find('.url');
                     passwordr.decryptCSV(urlHeader);
                     urlHeader.prop('hidden', false);
+
+                    var passwordSection = current_password.find('.password');
+                    passwordr.decryptCSV(passwordSection);
+                    passwordSection.prop('hidden', true);
 
                     var noteSection = current_password.find('.note');                    
                     passwordr.decryptCSV(noteSection);
@@ -389,15 +393,6 @@ Passwordr.prototype.changeMasterPassword = function() {
 
     if (masterPassword.val() != null) {
         if (masterPassword.val() == confirmMasterPassword.val()) {
-            // first, all hidden passwords must be decrypted
-            $('.password_template').each(function() {
-                var password = $(this).find('.password');
-
-                if (password.attr('hidden')) {
-                    passwordr.decryptCSV(password);
-                }
-            }); 
-
             window.crypto.subtle.importKey(
                 'raw',
                 passwordr.encoder.encode(masterPassword.val()).buffer,
@@ -496,20 +491,21 @@ Passwordr.prototype.exportXML = function() {
     // create DOM tree
     var doc = document.implementation.createDocument("", "", null);
     var passwordsElem = doc.createElement("passwords");
-    
+
     $('.password_template').each(function() {
-        // if password is encrypted, decrypt it
-        var password = $(this).find('.password');
-
-        if (password.attr('hidden')) {
-            passwordr.decryptCSV(password);
-        }
-
         var passwordElem = doc.createElement("password");
-        passwordElem.setAttribute("name", $(this).find('.name').text());
-        passwordElem.setAttribute("url", $(this).find('.url').text());
-        passwordElem.setAttribute("password", password.text());
-        passwordElem.setAttribute("note", $(this).find('.note').text());
+        var nameElem = doc.createElement("name");
+        nameElem.textContent = $(this).find('.name').text();
+        passwordElem.appendChild(nameElem);
+        var urlElem = doc.createElement("url");
+        urlElem.textContent = $(this).find('.url').text();
+        passwordElem.appendChild(urlElem);
+        var passwordFieldElem = doc.createElement("password");
+        passwordFieldElem.textContent = $(this).find('.password').text();
+        passwordElem.appendChild(passwordFieldElem);
+        var noteElem = doc.createElement("note");
+        noteElem.textContent = $(this).find('.note').text();
+        passwordElem.appendChild(noteElem);
         passwordsElem.appendChild(passwordElem);
         doc.appendChild(passwordsElem);
     });
@@ -518,9 +514,19 @@ Passwordr.prototype.exportXML = function() {
     var oSerializer = new XMLSerializer();
     var sXML = oSerializer.serializeToString(doc);
 
-    var downloadLink = document.createElement('a');
-    downloadLink.setAttribute('href', '#');
-    downloadLink.setAttribute('download', '')
+    // download
+    var link = document.createElement('a');
+    var filename = 'passwords.xml';
+    var bb = new Blob([sXML], {type: 'text/plain'});
+
+    link.setAttribute('href', window.URL.createObjectURL(bb));
+    link.setAttribute('download', filename);
+
+    link.dataset.downloadurl = ['text/plain', link.download, link.href].join(':');
+    link.draggable = true;
+    link.classList.add('dragout');
+
+    link.click();
 };
 
 // Template for passwords
@@ -599,7 +605,6 @@ Passwordr.prototype.decryptCSV = function(elem) {
 
 // Reveals a hidden password
 Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
-    this.decryptCSV(passwordSection);
     passwordSection.hidden = false;
     revealBtn.disabled = true;
 };
@@ -804,27 +809,27 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
         primarySection.appendChild(urlHeader);        
     }
 
-    // hide password until user clicks "Show"
+    nameHeader.textContent = name;
+    urlHeader.textContent = url;    
     passwordSection.textContent = password;
+    noteSection.textContent = note;
+
+    // hide password until user clicks "Show"
     passwordSection.hidden = true;
 
     if (this.encryptionKey != null) {
         // encryption key exists, so show fields
-        nameHeader.textContent = name;
         this.decryptCSV(nameHeader);
         nameHeader.hidden = false;
-        urlHeader.textContent = url;
         this.decryptCSV(urlHeader);
         urlHeader.hidden = false;
-        noteSection.textContent = note;
+        this.decryptCSV(passwordSection);
         this.decryptCSV(noteSection);
         noteSection.hidden = false;
-    } else { // the page just loaded, so do the revealing in setMasterPassword
-        nameHeader.textContent = name;
+    } else {
+        // the page just loaded, so do the revealing in setMasterPassword
         nameHeader.hidden = true;
-        urlHeader.textContent = url;
         urlHeader.hidden = true;
-        noteSection.textContent = note;
         noteSection.hidden = true;
     }
 

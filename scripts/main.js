@@ -14,7 +14,10 @@ function Passwordr() {
     this.changeMasterPasswordButton = document.getElementById('change-master-password');
     this.importExportDataButton = document.getElementById('import-export-data-button');  
     this.importXMLButton = document.getElementById('import-xml-button');
-    this.exportXMLButton = document.getElementById('export-xml-button');    
+    this.importJSONButton = document.getElementById('import-json-button');
+    this.importKeePassXMLButton = document.getElementById('import-keepass-xml-button');    
+    this.exportXMLButton = document.getElementById('export-xml-button');
+    this.exportJSONButton = document.getElementById('export-json-button');    
     this.newPasswordButton = document.getElementById('new-password');
     this.generatePasswordButton = document.getElementById('generate-password-button');
     this.userPic = document.getElementById('user-pic');    
@@ -49,12 +52,23 @@ function Passwordr() {
 
     this.newPasswordButton.addEventListener('click', function (evt) {
         passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
+
+        // clear old values (if any)
+        document.getElementById('add-name-input').value = '';
+        document.getElementById('add-url-input').value = '';
+        document.getElementById('add-password-input').value = '';
+        document.getElementById('add-confirm-password-input').value = '';        
+        document.getElementById('add-note-input').value = '';
+
         passwordr.newPasswordDialog.show();
     });
 
     this.generatePasswordButton.addEventListener('click', this.generatePassword.bind(this));
     this.importXMLButton.addEventListener('click', this.importXML.bind(this));
+    this.importJSONButton.addEventListener('click', this.importJSON.bind(this));    
+    this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
+    this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
     
     this.encoder = new TextEncoder();
     this.decoder = new TextDecoder();
@@ -478,12 +492,100 @@ Passwordr.prototype.changeMasterPassword = function() {
 // import data from an XML file
 Passwordr.prototype.importXML = function() {
     // allow user to upload XML file
+    var upload = document.createElement('input');
+    upload.setAttribute('type', 'file');
+    upload.onchange = function () {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var passwordsXML = new DOMParser().parseFromString(this.result, "text/xml");
+            
+            var passwords = document.evaluate('//password', passwordsXML, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+            
+            var password = passwords.iterateNext();
 
-    // parse the XML file
+            while (password) {
+                var name = document.evaluate('.//name', password, null, XPathResult.STRING_TYPE, null).stringValue;
+                var url = document.evaluate('.//url', password, null, XPathResult.STRING_TYPE, null).stringValue;
+                var passwordStr = document.evaluate('.//password_str', password, null, XPathResult.STRING_TYPE, null).stringValue;
+                var note = document.evaluate('.//note', password, null, XPathResult.STRING_TYPE, null).stringValue;
+                
+                // add to Firebase
+                passwordr.encrypt(name, url, passwordStr, note, null);
 
-    // if successfully parsed, load data into Firestore
+                // go to next password in XML
+                password = passwords.iterateNext();
+            }
+        };
 
-    // if error, show snackbar containing error message
+        // read the XML file
+        reader.readAsText(this.files[0]);
+    };
+    upload.click();
+};
+
+// import data from a KeePass XML file
+Passwordr.prototype.importKeePassXML = function() {
+    // allow user to upload KeePass XML file
+    var upload = document.createElement('input');
+    upload.setAttribute('type', 'file');
+    upload.onchange = function () {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var passwordsXML = new DOMParser().parseFromString(this.result, "text/xml");
+            
+            var passwords = document.evaluate('/KeePassFile/Root/Group/Group/Entry', passwordsXML, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+            
+            var password = passwords.iterateNext();
+
+            while (password) {
+                var nameNode = document.evaluate('./String[Key = "Title"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+                var name = document.evaluate('./Value', nameNode, null, XPathResult.STRING_TYPE, null).stringValue;
+                
+                var urlNode = document.evaluate('./String[Key = "URL"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+                var url = document.evaluate('./Value', urlNode, null, XPathResult.STRING_TYPE, null).stringValue;
+
+                var passwordNode = document.evaluate('./String[Key = "Password"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+                var passwordStr = document.evaluate('./Value', passwordNode, null, XPathResult.STRING_TYPE, null).stringValue;
+                
+                var noteNode = document.evaluate('./String[Key = "Notes"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+                var note = document.evaluate('./Value', noteNode, null, XPathResult.STRING_TYPE, null).stringValue;
+                
+                // add to Firebase
+                passwordr.encrypt(name, url, passwordStr, note, null);
+
+                // go to next password in XML
+                password = passwords.iterateNext();
+            }
+        };
+
+        // read the KeePass XML file
+        reader.readAsText(this.files[0]);
+    };
+    upload.click();
+}
+
+// imports data from a JSON file
+Passwordr.prototype.importJSON = function() {
+    // allow user to upload JSON file
+    var upload = document.createElement('input');
+    upload.setAttribute('type', 'file');
+    upload.onchange = function () {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var passwordsJSON = JSON.parse(this.result);
+            var password;
+
+            for (password in passwordsJSON.passwords) {
+                // encrypt, and add to Firebase
+                var passwordObj = passwordsJSON.passwords[password];
+                passwordr.encrypt(passwordObj.name, passwordObj.url, passwordObj.password_str, passwordObj.note, null);
+            }
+        };
+
+        // read the JSON file
+        reader.readAsText(this.files[0]);
+    };
+    upload.click();
 };
 
 // export data to an XML file
@@ -500,15 +602,16 @@ Passwordr.prototype.exportXML = function() {
         var urlElem = doc.createElement("url");
         urlElem.textContent = $(this).find('.url').text();
         passwordElem.appendChild(urlElem);
-        var passwordFieldElem = doc.createElement("password");
-        passwordFieldElem.textContent = $(this).find('.password').text();
-        passwordElem.appendChild(passwordFieldElem);
+        var passwordStrElem = doc.createElement("password_str");
+        passwordStrElem.textContent = $(this).find('.password').text();
+        passwordElem.appendChild(passwordStrElem);
         var noteElem = doc.createElement("note");
         noteElem.textContent = $(this).find('.note').text();
         passwordElem.appendChild(noteElem);
         passwordsElem.appendChild(passwordElem);
-        doc.appendChild(passwordsElem);
     });
+
+    doc.appendChild(passwordsElem);    
 
     // serialize to XML
     var oSerializer = new XMLSerializer();
@@ -518,6 +621,42 @@ Passwordr.prototype.exportXML = function() {
     var link = document.createElement('a');
     var filename = 'passwords.xml';
     var bb = new Blob([sXML], {type: 'text/plain'});
+
+    link.setAttribute('href', window.URL.createObjectURL(bb));
+    link.setAttribute('download', filename);
+
+    link.dataset.downloadurl = ['text/plain', link.download, link.href].join(':');
+    link.draggable = true;
+    link.classList.add('dragout');
+
+    link.click();
+};
+
+// export data to a JSON file
+Passwordr.prototype.exportJSON = function() {
+    var passwords = '{"passwords":{';
+    var passwordIndex = 0;
+
+    $('.password_template').each(function() {
+        passwords += '"password-' + passwordIndex + '":' +
+            JSON.stringify({
+                name: $(this).find('.name').text(),
+                url: $(this).find('.url').text(),
+                password_str:  $(this).find('.password').text(),
+                note: $(this).find('.note').text()
+            }) +
+        ",";
+
+        passwordIndex++;
+    });
+
+    // remove trailing comma, and add closing braces
+    passwords = passwords.substring(0, passwords.length - 1) + '}}';
+
+    // download
+    var link = document.createElement('a');
+    var filename = 'passwords.json';
+    var bb = new Blob([passwords], {type: 'text/plain'});
 
     link.setAttribute('href', window.URL.createObjectURL(bb));
     link.setAttribute('download', filename);
@@ -837,9 +976,9 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     var revealBtn = div.querySelector('.reveal');
     revealBtn.addEventListener('click', this.revealPassword.bind(this, passwordSection, revealBtn));
     // re-enable reveal button (if it was disabled)
-    if (passwordChanged) {
+    //if (passwordChanged) {
         revealBtn.removeAttribute('disabled');
-    }
+    //}
 
     var editBtn = div.querySelector('.edit');
 
@@ -880,7 +1019,9 @@ Passwordr.prototype.loadPasswords = function() {
 
     var removePasswordFromUI = function(data) {
         var div = document.getElementById(data.id);
-        div.parentNode.removeChild(div);
+        if (div != null) {
+            div.parentNode.removeChild(div);
+        }
     }.bind(this);
 
     this.passwordsRef.onSnapshot(function (snapshot) {

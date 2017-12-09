@@ -176,6 +176,25 @@
                 </div>
                 <div class="mdc-dialog__backdrop"></div>
             </aside>
+            <aside id="confirm-delete-password-dialog"
+                class="mdc-dialog"
+                role="alertdialog"
+                aria-labelledby="my-mdc-dialog-label"
+                aria-describedby="my-mdc-dialog-description">
+                <div class="mdc-dialog__surface">
+                    <header class="mdc-dialog__header">
+                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                            Confirm Delete
+                        </h2>
+                    </header>
+                    <section class="mdc-dialog__body mdc-dialog__body">
+                        <button type="button" id="confirm-delete-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Delete</button>                       
+                    </section>
+                    <footer class="mdc-dialog__footer">
+                    </footer>
+                </div>
+                <div class="mdc-dialog__backdrop"></div>
+            </aside>
         </main>
         
         <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
@@ -194,10 +213,13 @@
             messagingSenderId: "690176352805"
           };
           firebase.initializeApp(config);
+          //var CLIENT_ID = '114460382081-53ktfbndbtve0imgm2qsm8cqvbopgsga.apps.googleusercontent.com';
         </script>
         <script src="scripts/main.js"></script>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
+        <!--script src="bower_components/firebaseui/dist/firebaseui.js"></script-->
+        <!--link type="text/css" rel="stylesheet" href="bower_components/firebaseui/dist/firebaseui.css" /-->
     </body>
 </html>

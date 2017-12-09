@@ -20,6 +20,8 @@ function Passwordr() {
     this.exportJSONButton = document.getElementById('export-json-button');    
     this.newPasswordButton = document.getElementById('new-password');
     this.generatePasswordButton = document.getElementById('generate-password-button');
+    this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');    
+    
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
@@ -27,7 +29,8 @@ function Passwordr() {
     this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
     this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
-    
+    this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
+
     var passwordr = this;    
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
         passwordr.newPassword();
@@ -87,11 +90,35 @@ Passwordr.prototype.checkSetup = function() {
 Passwordr.prototype.initFirebase = function() {
     // Shortcuts to Firebase SDK features
     this.auth = firebase.auth();
-    this.database = firebase./*database()*/firestore();
+   // this.ui = new firebaseui.auth.AuthUI(this.auth);
+    
+    this.database = firebase.firestore();
     
     // Initiate Firebase Auth, and listen to auth state changes
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
 };
+
+/*function getUiConfig() {
+    return {
+        'callbacks': {
+            'signInSuccess': function(user, credential, redirectUrl) {
+                handleSignedInUser(user);
+                return false;
+            }
+        },
+        'signInFlow': 'popup',
+        'signInOptions': [
+            {
+                provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                // Required to enable this provider in One-Tap Sign-up.
+                authMethod: 'https://accounts.google.com',
+                // Required to enable ID token credentials for this provider.
+                clientId: CLIENT_ID
+            }
+        ],
+        'credentialHelper': firebaseui.auth.CredentialHelper.GOOGLE_YOLO
+    };
+}*/
 
 // Signs-in to Passwordr
 Passwordr.prototype.signIn = function() {
@@ -106,7 +133,9 @@ Passwordr.prototype.signIn = function() {
 // Signs-out of Passwordr
 Passwordr.prototype.signOut = function() {
     // Sign out of Firebase
-    this.auth.signOut();
+    this.auth.signOut().catch(function(error) {
+        console.log("Error: " + error);
+    });
 };
 
 // generates a random password
@@ -848,27 +877,23 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     }
     
     var oldPassword = "";
-    if (passwordSection.textContent != "") {
-        // make password section editable
-        var passwordTextfield = document.createElement('div');
-        passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
-        passwordSection.removeAttribute('hidden'); // reveal password
-        oldPassword = passwordSection.textContent;
-        passwordTextfield.querySelector('.mdc-textfield__input').value = oldPassword;
-        passwordSection.textContent = "";
-        passwordSection.appendChild(passwordTextfield);
-    }
+    // make password section editable
+    var passwordTextfield = document.createElement('div');
+    passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
+    passwordSection.removeAttribute('hidden'); // reveal password
+    oldPassword = passwordSection.textContent;
+    passwordTextfield.querySelector('.mdc-textfield__input').value = oldPassword;
+    passwordSection.textContent = "";
+    passwordSection.appendChild(passwordTextfield);
 
     var oldNote = "";
-    if (noteSection.textContent != "") {
-        // make note section editable
-        var noteTextfield = document.createElement('div');
-        noteTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
-        oldNote = noteSection.textContent;
-        noteTextfield.querySelector('.mdc-textfield__input').value = oldNote;
-        noteSection.textContent = "";
-        noteSection.appendChild(noteTextfield);
-    }
+    // make note section editable
+    var noteTextfield = document.createElement('div');
+    noteTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
+    oldNote = noteSection.textContent;
+    noteTextfield.querySelector('.mdc-textfield__input').value = oldNote;
+    noteSection.textContent = "";
+    noteSection.appendChild(noteTextfield);
 
     if (editBtn.parentNode != null) {
         // remove existing event listener, and add new event listener
@@ -879,32 +904,37 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     }
 };
 
-// Delete a password
+// attempt to delete a password
 Passwordr.prototype.deletePassword = function(key) {
-    if (this.checkSignedIn()) {
-        var passwordr = this;
+    this.database.collection("passwords").doc(key).delete().then(function() {
+        var data = {
+            message: 'Remove succeeded.',
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+            }
+        };
+        passwordr.messageSnackbar.show(data);
+        passwordr.loadPasswords();
+    })
+    .catch(function(error) {
+        var data = {
+            message: "Remove failed: " + error.message,
+            timeout: 2000,
+            actionText: 'OK',
+            actionHandler: function() {
+            }
+        };
+        passwordr.messageSnackbar.show(data);
+    });
+};
 
-        this.database.collection("passwords").doc(key).delete().then(function() {
-            var data = {
-                message: 'Remove succeeded.',
-                timeout: 2000,
-                actionText: 'OK',
-                actionHandler: function() {
-                }
-            };
-            passwordr.messageSnackbar.show(data);
-            passwordr.loadPasswords();
-        })
-        .catch(function(error) {
-            var data = {
-                message: "Remove failed: " + error.message,
-                timeout: 2000,
-                actionText: 'OK',
-                actionHandler: function() {
-                }
-            };
-            passwordr.messageSnackbar.show(data);
-        });
+// Actions that occur when a user clicks a password's "Delete" button
+Passwordr.prototype.deletePasswordButtonClicked = function(key) {
+    if (this.checkSignedIn()) {
+        // show the confirm delete dialog
+        this.confirmDeletePasswordButton.addEventListener('click', this.deletePassword.bind(this, key));
+        this.confirmDeletePasswordDialog.show();
     }   
 };
 
@@ -976,9 +1006,7 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     var revealBtn = div.querySelector('.reveal');
     revealBtn.addEventListener('click', this.revealPassword.bind(this, passwordSection, revealBtn));
     // re-enable reveal button (if it was disabled)
-    //if (passwordChanged) {
-        revealBtn.removeAttribute('disabled');
-    //}
+    revealBtn.removeAttribute('disabled');
 
     var editBtn = div.querySelector('.edit');
 
@@ -997,7 +1025,7 @@ Passwordr.prototype.displayPassword = function(key, name, url, password, note) {
     var deleteBtn = div.querySelector('.delete');
     var newDeleteBtn = deleteBtn.cloneNode(true);
     deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-    newDeleteBtn.addEventListener('click', this.deletePassword.bind(this, key));
+    newDeleteBtn.addEventListener('click', this.deletePasswordButtonClicked.bind(this, key));
 };
 
 // Loads passwords
@@ -1071,6 +1099,8 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
         while (this.passwordList.hasChildNodes()) {
             this.passwordList.removeChild(this.passwordList.lastChild);
         }
+
+        //this.ui.start('#firebaseui-container', getUiConfig()); // adjust Firebase Auth UI
     }
 };
 

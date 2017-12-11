@@ -9,7 +9,7 @@ function Passwordr() {
 
     // Shortcuts to DOM elements
     this.passwordList = document.getElementById('passwords');    
-    this.signInButton = document.getElementById('sign-in');
+    //this.signInButton = document.getElementById('sign-in');
     this.signOutButton = document.getElementById('sign-out');
     this.changeMasterPasswordButton = document.getElementById('change-master-password');
     this.importExportDataButton = document.getElementById('import-export-data-button');  
@@ -42,7 +42,7 @@ function Passwordr() {
         passwordr.changeMasterPassword();
     });
 
-    this.signInButton.addEventListener('click', this.signIn.bind(this));
+    //this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
     this.changeMasterPasswordButton.addEventListener('click', function (evt) {
         passwordr.changeMasterPasswordDialog.lastFocusedTarget = evt.target;
@@ -98,28 +98,6 @@ Passwordr.prototype.initFirebase = function() {
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
 };
 
-/*function getUiConfig() {
-    return {
-        'callbacks': {
-            'signInSuccess': function(user, credential, redirectUrl) {
-                handleSignedInUser(user);
-                return false;
-            }
-        },
-        'signInFlow': 'popup',
-        'signInOptions': [
-            {
-                provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-                // Required to enable this provider in One-Tap Sign-up.
-                authMethod: 'https://accounts.google.com',
-                // Required to enable ID token credentials for this provider.
-                clientId: CLIENT_ID
-            }
-        ],
-        'credentialHelper': firebaseui.auth.CredentialHelper.GOOGLE_YOLO
-    };
-}*/
-
 // Signs-in to Passwordr
 Passwordr.prototype.signIn = function() {
     // Sign in to Firebase using popup auth and Google as the identity provider
@@ -133,7 +111,10 @@ Passwordr.prototype.signIn = function() {
 // Signs-out of Passwordr
 Passwordr.prototype.signOut = function() {
     // Sign out of Firebase
-    this.auth.signOut().catch(function(error) {
+    this.auth.signOut().then(function() {
+        // Enable sign-in button
+        ui.start('#firebaseui-auth-container', uiConfig); // adjust Firebase Auth UI
+    }).catch(function(error) {
         console.log("Error: " + error);
     });
 };
@@ -1070,37 +1051,31 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
         var profilePicUrl = user.photoURL;
         var userName = user.displayName;
 
-        // Set the user's profile pic and name
-        this.userPic.setAttribute('src', profilePicUrl);
-        this.userName.textContent = userName;
+        user.getIdToken().then(function(accessToken) {
+            // Set the user's profile pic and name
+            this.userPic.setAttribute('src', profilePicUrl);
+            this.userName.textContent = userName;
 
-        // Show user's profile and sign-out button
-        this.userName.removeAttribute('hidden');
-        this.userPic.removeAttribute('hidden');
-        this.signOutButton.removeAttribute('disabled');
+            // Show user's profile and sign-out button
+            this.userName.removeAttribute('hidden');
+            this.userPic.removeAttribute('hidden');
+            this.signOutButton.removeAttribute('disabled');
 
-        // Hide sign-in button
-        this.signInButton.setAttribute('disabled', true);
+            // get master password
+            this.masterPasswordDialog.show();
 
-        // get master password
-        this.masterPasswordDialog.show();
-
-        this.loadPasswords();
+            this.loadPasswords();
+        }.bind(this));
     } else { // User is signed out
         // Hide user's profile, and disable sign-out button
         this.userName.setAttribute('hidden', true);
         this.userPic.removeAttribute('src');
         this.signOutButton.setAttribute('disabled', true);
-    
-        // Enable sign-in button
-        this.signInButton.removeAttribute('disabled');
-
+        
         // remove passwords from list
         while (this.passwordList.hasChildNodes()) {
             this.passwordList.removeChild(this.passwordList.lastChild);
         }
-
-        //this.ui.start('#firebaseui-container', getUiConfig()); // adjust Firebase Auth UI
     }
 };
 

@@ -21,6 +21,43 @@
                 margin-top: 8px;
             }
         </style>
+        <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+        <script>window.mdc.autoInit();</script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-firestore.js"></script>
+        <script src="scripts/main.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+        <script>
+              // Initialize Firebase
+              var config = {
+                apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
+                authDomain: "passwordr-3917b.firebaseapp.com",
+                databaseURL: "https://passwordr-3917b.firebaseio.com",
+                projectId: "passwordr-3917b",
+                storageBucket: "passwordr-3917b.appspot.com",
+                messagingSenderId: "690176352805"
+              };
+              firebase.initializeApp(config);
+              //var CLIENT_ID = '114460382081-53ktfbndbtve0imgm2qsm8cqvbopgsga.apps.googleusercontent.com';
+        </script>
+        <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
+        <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
+        <script>
+            var uiConfig = {
+                signInSuccessUrl: '#',
+                signInOptions: [
+                    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+                ],
+                tosUrl: 'tos.html'
+            };
+
+            var ui = new firebaseui.auth.AuthUI(firebase.auth());
+            ui.start('#firebaseui-auth-container', uiConfig);
+            ui.disableAutoSignIn();
+        </script>
     </head>
     <body>
         <header>
@@ -32,7 +69,8 @@
                     <img id="user-pic" class="mdc-card__media-item">
                 </div>
                 <section class="mdc-card__actions">
-                    <button id="sign-in" class="mdc-button mdc-button--compact mdc-card__action">Sign in</button>
+                    <div id="firebaseui-auth-container"></div>                        
+                    <!--button id="sign-in" class="mdc-button mdc-button--compact mdc-card__action">Sign in</button-->
                     <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
                     <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
                     <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
@@ -196,30 +234,5 @@
                 <div class="mdc-dialog__backdrop"></div>
             </aside>
         </main>
-        
-        <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-        <script>window.mdc.autoInit();</script>
-        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-app.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-auth.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase-firestore.js"></script>
-        <script>
-          // Initialize Firebase
-          var config = {
-            apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
-            authDomain: "passwordr-3917b.firebaseapp.com",
-            databaseURL: "https://passwordr-3917b.firebaseio.com",
-            projectId: "passwordr-3917b",
-            storageBucket: "passwordr-3917b.appspot.com",
-            messagingSenderId: "690176352805"
-          };
-          firebase.initializeApp(config);
-          //var CLIENT_ID = '114460382081-53ktfbndbtve0imgm2qsm8cqvbopgsga.apps.googleusercontent.com';
-        </script>
-        <script src="scripts/main.js"></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"
-        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-        crossorigin="anonymous"></script>
-        <!--script src="bower_components/firebaseui/dist/firebaseui.js"></script-->
-        <!--link type="text/css" rel="stylesheet" href="bower_components/firebaseui/dist/firebaseui.css" /-->
     </body>
 </html>

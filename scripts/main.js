@@ -73,8 +73,8 @@ function Passwordr() {
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
     this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
     
-    this.encoder = new TextEncoder();
-    this.decoder = new TextDecoder();
+    //this.encoder = new TextEncoder();
+    //this.decoder = new TextDecoder();
 
     this.initFirebase();
 };
@@ -173,7 +173,8 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
             tagLength: 128
         },
         passwordr.encryptionKey,
-        passwordr.encoder.encode(name).buffer
+        //passwordr.encoder.encode(name).buffer
+        new StringView(name).buffer
     ).then(function(encryptedName) {
         // URL
         var urlIV = window.crypto.getRandomValues(new Uint8Array(12));
@@ -186,7 +187,8 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                 tagLength: 128
             },
             passwordr.encryptionKey,
-            passwordr.encoder.encode(url).buffer
+            //passwordr.encoder.encode(url).buffer
+            new StringView(url).buffer
         ).then(function(encryptedUrl) {
             // password
             var passwordIV = window.crypto.getRandomValues(new Uint8Array(12));            
@@ -199,7 +201,8 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                     tagLength: 128
                 },
                 passwordr.encryptionKey,
-                passwordr.encoder.encode(password).buffer
+                //passwordr.encoder.encode(password).buffer
+                new StringView(password).buffer
             ).then(function(encryptedPassword) {
                 // note
                 var noteIV = window.crypto.getRandomValues(new Uint8Array(12));                
@@ -212,7 +215,8 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                         tagLength: 128
                     },
                     passwordr.encryptionKey,
-                    passwordr.encoder.encode(note).buffer
+                    //passwordr.encoder.encode(note).buffer
+                    new StringView(note).buffer
                 ).then(function(encryptedNote) {                    
                     var encryptedEncodedName = new Uint8Array(encryptedName);
                     var encryptedEncodedUrl = new Uint8Array(encryptedUrl);
@@ -333,7 +337,8 @@ Passwordr.prototype.setMasterPassword = function() {
     if ($('#master-password').val() != null) {
         window.crypto.subtle.importKey(
             'raw',
-            passwordr.encoder.encode($('#master-password').val()).buffer,
+            //passwordr.encoder.encode($('#master-password').val()).buffer,
+            new StringView($('#master-password').val()).buffer,
             'HKDF',
             false,
             ['deriveKey']
@@ -342,7 +347,8 @@ Passwordr.prototype.setMasterPassword = function() {
                 {
                     name: 'HKDF',
                     salt: new Uint8Array(),
-                    info: passwordr.encoder.encode('encryption').buffer,
+                    //info: passwordr.encoder.encode('encryption').buffer,
+                    info: new StringView('encryption').buffer,
                     hash: 'SHA-256'
                 },
                 key,
@@ -419,7 +425,8 @@ Passwordr.prototype.changeMasterPassword = function() {
         if (masterPassword.val() == confirmMasterPassword.val()) {
             window.crypto.subtle.importKey(
                 'raw',
-                passwordr.encoder.encode(masterPassword.val()).buffer,
+                //passwordr.encoder.encode(masterPassword.val()).buffer,
+                new StringView(masterPassword.val()).buffer,
                 'HKDF',
                 false,
                 ['deriveKey']
@@ -428,7 +435,8 @@ Passwordr.prototype.changeMasterPassword = function() {
                     {
                         name: 'HKDF',
                         salt: new Uint8Array(),
-                        info: passwordr.encoder.encode('encryption').buffer,
+                        //info: passwordr.encoder.encode('encryption').buffer,
+                        info: new StringView('encryption').buffer,
                         hash: 'SHA-256'
                     },
                     key,
@@ -735,9 +743,11 @@ Passwordr.prototype.decryptCSV = function(elem) {
     )
     .then(function(decrypted) {
         if (elem.textContent != null) { // no jQuery
-            elem.textContent = passwordr.decoder.decode(decrypted);            
+            //elem.textContent = passwordr.decoder.decode(decrypted);
+            elem.textContent = new StringView(decrypted).toString();           
         } else { // jQuery
-            elem.text(passwordr.decoder.decode(decrypted));                        
+            //elem.text(passwordr.decoder.decode(decrypted));
+            elem.text(new StringView(decrypted).toString());                      
         }
     })
     .catch(function(err) {

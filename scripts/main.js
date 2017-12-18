@@ -1070,7 +1070,7 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
             this.userName.removeAttribute('hidden');
             this.userPic.removeAttribute('hidden');
             this.signOutButton.removeAttribute('disabled');
-
+            $('#firebaseui-auth-container').prop('hidden', true);
             // get master password
             this.masterPasswordDialog.show();
 
@@ -1081,6 +1081,7 @@ Passwordr.prototype.onAuthStateChanged = function(user) {
         this.userName.setAttribute('hidden', true);
         this.userPic.removeAttribute('src');
         this.signOutButton.setAttribute('disabled', true);
+        $('#firebaseui-auth-container').prop('hidden', false);
         
         // remove passwords from list
         while (this.passwordList.hasChildNodes()) {

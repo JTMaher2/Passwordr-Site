@@ -225,7 +225,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
 
                     // if this is a new password, there won't be a key
                     if (key == null) {
-                        passwordr.passwordsRef.add({
+                        passwordr.database.collection('passwords').add({
                             name: nameWithIV,
                             url: urlWithIV,
                             password: passwordWithIV,
@@ -242,7 +242,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                             passwordr.messageSnackbar.show(data);
                         });
                     } else { // it's an existing password
-                        passwordr.passwordsRef.doc(key).update({
+                        passwordr.database.collection('passwords').doc(key).update({
                             name: nameWithIV,
                             url: urlWithIV,
                             password: passwordWithIV,

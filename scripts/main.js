@@ -9,7 +9,6 @@ function Passwordr() {
 
     // Shortcuts to DOM elements
     this.passwordList = document.getElementById('passwords');    
-    //this.signInButton = document.getElementById('sign-in');
     this.signOutButton = document.getElementById('sign-out');
     this.changeMasterPasswordButton = document.getElementById('change-master-password');
     this.importExportDataButton = document.getElementById('import-export-data-button');  
@@ -31,7 +30,7 @@ function Passwordr() {
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
 
-    var passwordr = this;    
+    var passwordr = this;
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
         passwordr.newPassword();
     });
@@ -42,7 +41,6 @@ function Passwordr() {
         passwordr.changeMasterPassword();
     });
 
-    //this.signInButton.addEventListener('click', this.signIn.bind(this));
     this.signOutButton.addEventListener('click', this.signOut.bind(this));
     this.changeMasterPasswordButton.addEventListener('click', function (evt) {
         passwordr.changeMasterPasswordDialog.lastFocusedTarget = evt.target;
@@ -87,7 +85,6 @@ Passwordr.prototype.checkSetup = function() {
 Passwordr.prototype.initFirebase = function() {
     // Shortcuts to Firebase SDK features
     this.auth = firebase.auth();
-   // this.ui = new firebaseui.auth.AuthUI(this.auth);
     
     this.database = firebase.firestore();
     
@@ -160,7 +157,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
     var passwordr = this;
     
     // name
-    var nameIV = window.crypto.getRandomValues(new Uint8Array(12));    
+    var nameIV = window.crypto.getRandomValues(new Uint8Array(12));
     window.crypto.subtle.encrypt(
         {
             name: "AES-GCM",
@@ -170,7 +167,6 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
             tagLength: 128
         },
         passwordr.encryptionKey,
-        //passwordr.encoder.encode(name).buffer
         new StringView(name).buffer
     ).then(function(encryptedName) {
         // URL
@@ -184,7 +180,6 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                 tagLength: 128
             },
             passwordr.encryptionKey,
-            //passwordr.encoder.encode(url).buffer
             new StringView(url).buffer
         ).then(function(encryptedUrl) {
             // password
@@ -218,10 +213,10 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                     var encryptedEncodedPassword = new Uint8Array(encryptedPassword);
                     var encryptedEncodedNote = new Uint8Array(encryptedNote);
 
-                    var nameWithIV = passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
-                    var urlWithIV = passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
-                    var passwordWithIV = passwordr.bufferToCSV(passwordIV, passwordIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedPassword, encryptedEncodedPassword.length);
-                    var noteWithIV = passwordr.bufferToCSV(noteIV, noteIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedNote, encryptedEncodedNote.length);
+                    var nameWithIV = name == '' ? '' : passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
+                    var urlWithIV = url == '' ? '' : passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
+                    var passwordWithIV = password == '' ? '' : passwordr.bufferToCSV(passwordIV, passwordIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedPassword, encryptedEncodedPassword.length);
+                    var noteWithIV = note == '' ? '' : passwordr.bufferToCSV(noteIV, noteIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedNote, encryptedEncodedNote.length);
 
                     // if this is a new password, there won't be a key
                     if (key == null) {
@@ -330,59 +325,42 @@ Passwordr.prototype.setMasterPassword = function() {
     var passwordr = this;
 
     if ($('#master-password').val() != null) {
+        var pass = $('#master-password').val();
+        while (pass.length < 32) {
+            pass += '0';
+        }
+        while (pass.length > 32) {
+            pass = pass.slice(1, -1);
+        }
         window.crypto.subtle.importKey(
             'raw',
-            new StringView($('#master-password').val()).buffer,
-            'HKDF',
+            new StringView(pass).buffer,
+            'AES-GCM',
             false,
-            ['deriveKey']
+            ['encrypt', 'decrypt']
         ).then(function(key) {
-            window.crypto.subtle.deriveKey(
-                {
-                    name: 'HKDF',
-                    salt: new Uint8Array(),
-                    info: new StringView('encryption').buffer,
-                    hash: 'SHA-256'
-                },
-                key,
-                {
-                    name: 'AES-GCM',
-                    length: 128
-                },
-                false,
-                ['encrypt', 'decrypt']
-            ).then(function(derived) {
-                passwordr.encryptionKey = derived;
+            passwordr.encryptionKey = key;
 
-                // decrypt and show all fields
-                $('.password_template').each(function() {
-                    var current_password = $(this);
+            // decrypt and show all fields
+            passwordr.decryptErrorShown = false;
+            $('.password_template').each(function() {
+                var current_password = $(this);
 
-                    var nameHeader = current_password.find('.name');                    
-                    passwordr.decryptCSV(nameHeader);
-                    nameHeader.prop('hidden', false);
+                var nameHeader = current_password.find('.name');                    
+                passwordr.decryptCSV(nameHeader);
+                nameHeader.prop('hidden', false);
 
-                    var urlHeader = current_password.find('.url');
-                    passwordr.decryptCSV(urlHeader);
-                    urlHeader.prop('hidden', false);
+                var urlHeader = current_password.find('.url');
+                passwordr.decryptCSV(urlHeader);
+                urlHeader.prop('hidden', false);
 
-                    var passwordSection = current_password.find('.password');
-                    passwordr.decryptCSV(passwordSection);
-                    passwordSection.prop('hidden', true);
+                var passwordSection = current_password.find('.password');
+                passwordr.decryptCSV(passwordSection);
+                passwordSection.prop('hidden', true);
 
-                    var noteSection = current_password.find('.note');                    
-                    passwordr.decryptCSV(noteSection);
-                    noteSection.prop('hidden', false);  
-                });
-            }).catch(function(err) {
-                var data = {
-                    message: 'Derivation error: ' + err,
-                    timeout: 2000,
-                    actionText: 'OK',
-                    actionHandler: function() {
-                    }
-                };
-                passwordr.messageSnackbar.show(data);
+                var noteSection = current_password.find('.note');                    
+                passwordr.decryptCSV(noteSection);
+                noteSection.prop('hidden', false);  
             });
         }).catch(function(err) {
             var data = {
@@ -707,48 +685,54 @@ Passwordr.prototype.decryptCSV = function(elem) {
     var passwordr = this;
     if (elem.textContent != null) { // no jQuery
         var csv = elem.textContent.split(',');        
-    } else { // using jQuery
+    } else if (elem.text() != null) { // using jQuery
         var csv = elem.text().split(',');
     }
 
-    for (var i = 0; i < ivLen; i++) {
-        iv[i] = csv[i];
-    }
-
-    var data = new Uint8Array(csv.length - ivLen);
-
-    var dataIndex = 0;
-    for (var i = ivLen; i < csv.length; i++) {
-        data[dataIndex] = csv[i];
-        dataIndex++;
-    }
-
-    window.crypto.subtle.decrypt(
-        {
-            name: "AES-GCM",
-            iv: iv,
-            tagLength: 128
-        },
-        passwordr.encryptionKey,
-        data
-    )
-    .then(function(decrypted) {
-        if (elem.textContent != null) { // no jQuery
-            elem.textContent = new StringView(decrypted).toString();           
-        } else { // jQuery
-            elem.text(new StringView(decrypted).toString());                      
+    if (csv.length != 1 || csv[0] != '') {
+        for (var i = 0; i < ivLen; i++) {
+            iv[i] = csv[i];
         }
-    })
-    .catch(function(err) {
-        var data = {
-            message: 'Decryption error: ' + err,
-            timeout: 2000,
-            actionText: 'OK',
-            actionHandler: function() {
+
+        var data = new Uint8Array(csv.length - ivLen);
+
+        var dataIndex = 0;
+        for (var i = ivLen; i < csv.length; i++) {
+            data[dataIndex] = csv[i];
+            dataIndex++;
+        }
+
+        window.crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: iv,
+                tagLength: 128
+            },
+            passwordr.encryptionKey,
+            data
+        )
+        .then(function(decrypted) {
+            if (elem.textContent != null) { // no jQuery
+                elem.textContent = new StringView(decrypted).toString();           
+            } else { // jQuery
+                elem.text(new StringView(decrypted).toString());
             }
-        };
-        passwordr.messageSnackbar.show(data);
-    });
+        })
+        .catch(function(err) {
+            if (!passwordr.decryptErrorShown) {
+                var data = {
+                    message: 'Decryption error: ' + err,
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                passwordr.messageSnackbar.show(data);
+
+                passwordr.decryptErrorShown = true;
+            }
+        });
+    }
 };
 
 // Reveals a hidden password

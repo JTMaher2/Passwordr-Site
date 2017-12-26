@@ -155,7 +155,7 @@ Passwordr.prototype.bufferToCSV = function(buffer, length) {
 // Encrypt a string using AES-GCM
 Passwordr.prototype.encrypt = function(name, url, password, note, key) {
     var passwordr = this;
-    
+
     // name
     var nameIV = window.crypto.getRandomValues(new Uint8Array(12));
     window.crypto.subtle.encrypt(
@@ -213,10 +213,10 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                     var encryptedEncodedPassword = new Uint8Array(encryptedPassword);
                     var encryptedEncodedNote = new Uint8Array(encryptedNote);
 
-                    var nameWithIV = name == '' ? '' : passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
-                    var urlWithIV = url == '' ? '' : passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
-                    var passwordWithIV = password == '' ? '' : passwordr.bufferToCSV(passwordIV, passwordIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedPassword, encryptedEncodedPassword.length);
-                    var noteWithIV = note == '' ? '' : passwordr.bufferToCSV(noteIV, noteIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedNote, encryptedEncodedNote.length);
+                    var nameWithIV = passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
+                    var urlWithIV = passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
+                    var passwordWithIV = passwordr.bufferToCSV(passwordIV, passwordIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedPassword, encryptedEncodedPassword.length);
+                    var noteWithIV = passwordr.bufferToCSV(noteIV, noteIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedNote, encryptedEncodedNote.length);
 
                     // if this is a new password, there won't be a key
                     if (key == null) {
@@ -302,21 +302,60 @@ Passwordr.prototype.newPassword = function() {
     if (this.checkSignedIn()) {
         var name = document.getElementById('add-name-input').value;
         var url = document.getElementById('add-url-input').value;
-        var password = document.getElementById('add-password-input').value;
-        var confirmPassword = document.getElementById('add-confirm-password-input').value;
-        var note = document.getElementById('add-note-input').value;
-        
-        if (password == confirmPassword) {
-            this.encrypt(name, url, password, note, null); // do not provide a key
-        } else {
+        if (name == '' && url == '') {
             var data = {
-                message: 'Password must match confirm password',
+                message: 'You must provide either a name or a URL',
                 timeout: 2000,
                 actionText: 'OK',
                 actionHandler: function() {
                 }
             };
             this.messageSnackbar.show(data);
+        } else {
+            if (name == '') {
+                name = ' ';
+            }
+            
+            if (url == '') {
+                url = ' ';
+            }
+
+            var password = document.getElementById('add-password-input').value;
+            var confirmPassword = document.getElementById('add-confirm-password-input').value;
+            
+            // password:
+            // 1) must match confirm password
+            // 2) must be at least 8 characters long
+            // 3) must contain at least 1 number
+            // 4) must contain at least 1 special character
+            if (password.length < 8 || password.match(/\d+/g) == null || password.match(/\W+/g) == null) {
+                var data = {
+                    message: 'Password must conform to guidelines (i.e. at least 8 characters, at least 1 number, at least 1 special character)',
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                this.messageSnackbar.show(data);
+            } else {
+                if (password != confirmPassword) {
+                    var data = {
+                        message: 'Password must match confirm password',
+                        timeout: 2000,
+                        actionText: 'OK',
+                        actionHandler: function() {
+                        }
+                    };
+                    this.messageSnackbar.show(data);
+                } else {
+                    var note = document.getElementById('add-note-input').value;
+                    if (note == '') {
+                        note = ' ';
+                    }
+
+                    this.encrypt(name, url, password, note, null); // do not provide a key
+                }
+            }
         }
     }
 };
@@ -394,29 +433,21 @@ Passwordr.prototype.changeMasterPassword = function() {
 
     if (masterPassword.val() != null) {
         if (masterPassword.val() == confirmMasterPassword.val()) {
-            window.crypto.subtle.importKey(
-                'raw',
-                new StringView(masterPassword.val()).buffer,
-                'HKDF',
-                false,
-                ['deriveKey']
-            ).then(function(key) {
-                window.crypto.subtle.deriveKey(
-                    {
-                        name: 'HKDF',
-                        salt: new Uint8Array(),
-                        info: new StringView('encryption').buffer,
-                        hash: 'SHA-256'
-                    },
-                    key,
-                    {
-                        name: 'AES-GCM',
-                        length: 128
-                    },
+            if (masterPassword.val().length >= 8 && masterPassword.val().match(/\d+/g) != null && masterPassword.val().match(/\W+/g) != null) {
+                while (masterPassword.val().length < 32) {
+                    masterPassword.val(masterPassword.val() + '0');
+                }
+                while (masterPassword.length > 32) {
+                    masterPassword.val(masterPassword.val().slice(1, -1));
+                }
+                window.crypto.subtle.importKey(
+                    'raw',
+                    new StringView(masterPassword.val()).buffer,
+                    'AES-GCM',
                     false,
                     ['encrypt', 'decrypt']
-                ).then(function(derived) {
-                    passwordr.encryptionKey = derived;
+                ).then(function(key) {
+                    passwordr.encryptionKey = key;
                     
                     // re-encrypt all fields
                     $('.password_template').each(function() {
@@ -434,7 +465,7 @@ Passwordr.prototype.changeMasterPassword = function() {
                     window.location.reload(); // refresh the page
                 }).catch(function(err) {
                     var data = {
-                        message: 'Derivation error: ' + err,
+                        message: 'Import error: ' + err,
                         timeout: 2000,
                         actionText: 'OK',
                         actionHandler: function() {
@@ -442,16 +473,17 @@ Passwordr.prototype.changeMasterPassword = function() {
                     };
                     passwordr.messageSnackbar.show(data);
                 });
-            }).catch(function(err) {
+            } else {
                 var data = {
-                    message: 'Import error: ' + err,
+                    message: 'Password must be at least 8 characters long, must contain at least 1 number, and must contain at least 1 special character.',
                     timeout: 2000,
                     actionText: 'OK',
                     actionHandler: function() {
+                        passwordr.changeMasterPasswordDialog.show();
                     }
                 };
-                passwordr.messageSnackbar.show(data);
-            });
+                this.messageSnackbar.show(data);
+            }
         } else {
             var data = {
                 message: 'Password and confirm password must match.',
@@ -527,16 +559,28 @@ Passwordr.prototype.importKeePassXML = function() {
             while (password) {
                 var nameNode = document.evaluate('./String[Key = "Title"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
                 var name = document.evaluate('./Value', nameNode, null, XPathResult.STRING_TYPE, null).stringValue;
-                
+                if (name == '') {
+                    name = ' ';
+                }
+
                 var urlNode = document.evaluate('./String[Key = "URL"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
                 var url = document.evaluate('./Value', urlNode, null, XPathResult.STRING_TYPE, null).stringValue;
+                if (url == '') {
+                    url = ' ';
+                }
 
                 var passwordNode = document.evaluate('./String[Key = "Password"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
                 var passwordStr = document.evaluate('./Value', passwordNode, null, XPathResult.STRING_TYPE, null).stringValue;
-                
+                if (passwordStr == '') {
+                    passwordStr = ' ';
+                }
+
                 var noteNode = document.evaluate('./String[Key = "Notes"]', password, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
                 var note = document.evaluate('./Value', noteNode, null, XPathResult.STRING_TYPE, null).stringValue;
-                
+                if (note == '') {
+                    note = ' ';
+                }
+
                 // add to Firebase
                 passwordr.encrypt(name, url, passwordStr, note, null);
 
@@ -584,16 +628,16 @@ Passwordr.prototype.exportXML = function() {
     $('.password_template').each(function() {
         var passwordElem = doc.createElement("password");
         var nameElem = doc.createElement("name");
-        nameElem.textContent = $(this).find('.name').text();
+        nameElem.textContent = $(this).find('.name').text() == '' ? ' ' : $(this).find('.name').text();
         passwordElem.appendChild(nameElem);
         var urlElem = doc.createElement("url");
-        urlElem.textContent = $(this).find('.url').text();
+        urlElem.textContent = $(this).find('.url').text() == '' ? ' ' : $(this).find('.url').text();
         passwordElem.appendChild(urlElem);
         var passwordStrElem = doc.createElement("password_str");
-        passwordStrElem.textContent = $(this).find('.password').text();
+        passwordStrElem.textContent = $(this).find('.password').text() == '' ? ' ' : $(this).find('.password').text();
         passwordElem.appendChild(passwordStrElem);
         var noteElem = doc.createElement("note");
-        noteElem.textContent = $(this).find('.note').text();
+        noteElem.textContent = $(this).find('.note').text() == '' ? ' ' : $(this).find('.note').text();
         passwordElem.appendChild(noteElem);
         passwordsElem.appendChild(passwordElem);
     });
@@ -627,10 +671,10 @@ Passwordr.prototype.exportJSON = function() {
     $('.password_template').each(function() {
         passwords += '"password-' + passwordIndex + '":' +
             JSON.stringify({
-                name: $(this).find('.name').text(),
-                url: $(this).find('.url').text(),
-                password_str:  $(this).find('.password').text(),
-                note: $(this).find('.note').text()
+                name: $(this).find('.name').text() == '' ? ' ' : $(this).find('.name').text(),
+                url: $(this).find('.url').text() == '' ? ' ' : $(this).find('.url').text(),
+                password_str:  $(this).find('.password').text() == '' ? ' ' : $(this).find('.password').text(),
+                note: $(this).find('.note').text() == '' ? ' ' : $(this).find('.note').text()
             }) +
         ",";
 
@@ -789,30 +833,38 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
         revealBtn.removeAttribute('disabled');
     } else {
         // Check that the user entered at least a name and password, and that the user is signed in
-        if (newName.length > 0 && newPassword.length > 0 && this.checkSignedIn()) {
-            // update Firebase
-            passwordr.encrypt(newName, newUrl, newPassword, newNote, key);
+        if (newName != '' || newUrl != '') {
+            if (newPassword.length >= 8 && newPassword.match(/\d+/g) != null && newPassword.match(/\W+/g) != null) {
+                // update Firebase
+                if (newName == '') {
+                    newName = ' ';
+                }
+                if (newUrl == '') {
+                    newUrl = ' ';
+                }
+                if (newNote == '') {
+                    newNote = ' ';
+                }
+                passwordr.encrypt(newName, newUrl, newPassword, newNote, key);
+            } else {
+                var data = {
+                    message: 'Password must be at least 8 characters long, must contain at least 1 number, and must contain at least 1 special character.',
+                    timeout: 2000,
+                    actionText: 'OK',
+                    actionHandler: function() {
+                    }
+                };
+                passwordr.messageSnackbar.show(data);
+            }
         } else {
-            if (newName.length == 0) {
-                var data = {
-                    message: 'Name is required',
-                    timeout: 2000,
-                    actionText: 'OK',
-                    actionHandler: function() {
-                    }
-                };
-                passwordr.messageSnackbar.show(data);
-            }
-            if (newPassword.length == 0) {
-                var data = {
-                    message: 'Password is required',
-                    timeout: 2000,
-                    actionText: 'OK',
-                    actionHandler: function() {
-                    }
-                };
-                passwordr.messageSnackbar.show(data);
-            }
+            var data = {
+                message: 'You must provide either a name or a URL.',
+                timeout: 2000,
+                actionText: 'OK',
+                actionHandler: function() {
+                }
+            };
+            passwordr.messageSnackbar.show(data);
         }
     }
 };
@@ -880,16 +932,6 @@ Passwordr.prototype.deletePassword = function(key) {
         };
         passwordr.messageSnackbar.show(data);
         passwordr.loadPasswords();
-    })
-    .catch(function(error) {
-        var data = {
-            message: "Remove failed: " + error.message,
-            timeout: 2000,
-            actionText: 'OK',
-            actionHandler: function() {
-            }
-        };
-        passwordr.messageSnackbar.show(data);
     });
 };
 

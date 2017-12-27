@@ -369,7 +369,7 @@ Passwordr.prototype.setMasterPassword = function() {
             pass += '0';
         }
         while (pass.length > 32) {
-            pass = pass.slice(1, -1);
+            pass = pass.slice(0, -1);
         }
         window.crypto.subtle.importKey(
             'raw',
@@ -438,7 +438,7 @@ Passwordr.prototype.changeMasterPassword = function() {
                     masterPassword.val(masterPassword.val() + '0');
                 }
                 while (masterPassword.length > 32) {
-                    masterPassword.val(masterPassword.val().slice(1, -1));
+                    masterPassword.val(masterPassword.val().slice(0, -1));
                 }
                 window.crypto.subtle.importKey(
                     'raw',

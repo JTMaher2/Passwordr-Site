@@ -18,7 +18,8 @@ function Passwordr() {
     this.exportXMLButton = document.getElementById('export-xml-button');
     this.exportJSONButton = document.getElementById('export-json-button');    
     this.newPasswordButton = document.getElementById('new-password');
-    this.generatePasswordButton = document.getElementById('generate-password-button');
+    this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
+    this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
     this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');    
     
     this.userPic = document.getElementById('user-pic');    
@@ -63,8 +64,9 @@ function Passwordr() {
 
         passwordr.newPasswordDialog.show();
     });
-
-    this.generatePasswordButton.addEventListener('click', this.generatePassword.bind(this));
+    
+    this.generateNewPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#add-password-input'), $('#add-confirm-password-input')));
+    this.generateMasterPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#new-master-password'), $('#confirm-new-master-password')));
     this.importXMLButton.addEventListener('click', this.importXML.bind(this));
     this.importJSONButton.addEventListener('click', this.importJSON.bind(this));    
     this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
@@ -114,7 +116,7 @@ Passwordr.prototype.signOut = function() {
 };
 
 // generates a random password
-Passwordr.prototype.generatePassword = function () {
+Passwordr.prototype.generatePassword = function (passwordField, confirmPasswordField) {
     const length = 20;
     var string = "abcdefghijklmnopqrstuvwxyz"; //to upper 
     var numeric = '0123456789';
@@ -135,8 +137,12 @@ Passwordr.prototype.generatePassword = function () {
     }
     
     // populate the password and confirm password fields with the random password
-    $('#add-password-input').val(password);
-    $('#add-confirm-password-input').val(password);
+    $(passwordField).text(password);
+    $(passwordField).val(password);
+    if (confirmPasswordField != null) {
+        $(confirmPasswordField).text(password);
+        $(confirmPasswordField).val(password);
+    }
 };
 
 // convert an ArrayBuffer into CSV format
@@ -896,11 +902,24 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     // make password section editable
     var passwordTextfield = document.createElement('div');
     passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
+    $(passwordTextfield).prop('id', 'add-existing-password-input');
     passwordSection.removeAttribute('hidden'); // reveal password
     oldPassword = passwordSection.textContent;
     passwordTextfield.querySelector('.mdc-textfield__input').value = oldPassword;
     passwordSection.textContent = "";
     passwordSection.appendChild(passwordTextfield);
+
+    // add generate button
+    var genBtn = document.createElement('button');
+    $(genBtn).prop('type', 'button');
+    $(genBtn).prop('id', 'generate-existing-password-button');
+    $(genBtn).prop('class', 'mdc-button mdc-dialog__footer__button mdc-ripple-upgraded');
+    $(genBtn).prop('style', '--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;');
+    $(genBtn).text('Generate');
+    passwordSection.appendChild(genBtn);
+
+    this.generateExistingPasswordButton = document.getElementById('generate-existing-password-button');
+    this.generateExistingPasswordButton.addEventListener('click', this.generatePassword.bind(this, passwordTextfield.querySelector('.mdc-textfield__input'), null));
 
     var oldNote = "";
     // make note section editable

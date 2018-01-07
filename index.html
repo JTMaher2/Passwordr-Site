@@ -8,319 +8,11 @@
             rel="stylesheet"
             href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
         <style>
-            :root {
-                --mdc-theme-primary: #0e4ead;
+            .firebaseui-idp-list {
+                display: flex;
             }
-            
-            .mdc-ripple-surface.mdc-ripple-upgraded.mdc-button--primary::before,
-            .mdc-ripple-surface.mdc-ripple-upgraded.mdc-button--primary::after {
-                background-color: rgba(255, 255, 255, .2);
-            }
-            
-            #sign-in-form > button {
-                margin-top: 8px;
-            }
-
-            .mdc-header-button {
-                font-family: Roboto,sans-serif;
-                -moz-osx-font-smoothing: grayscale;
-                -webkit-font-smoothing: antialiased;
-                font-size: .875rem;
-                font-weight: 500;
-                letter-spacing: .04em;
-                line-height: 2.25rem;
-                text-decoration: none;
-                text-transform: uppercase;
-                --mdc-ripple-fg-size: 0;
-                --mdc-ripple-left: 0;
-                --mdc-ripple-top: 0;
-                --mdc-ripple-fg-scale: 1;
-                --mdc-ripple-fg-translate-end: 0;
-                --mdc-ripple-fg-translate-start: 0;
-                -webkit-tap-highlight-color: transparent;
-                display: inline-block;
-                position: relative;
-                -webkit-box-sizing: border-box;
-                box-sizing: border-box;
-                min-width: 64px;
-                padding: 0 16px;
-                border: none;
-                outline: none;
-                text-align: center;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                -webkit-appearance: none;
-                overflow: hidden;
-                vertical-align: middle;
-                border-radius: 2px;
-            }
-
-            .mdc-header-button:after,.mdc-header-button:before {
-                position: absolute;
-                border-radius: 50%;
-                opacity: 0;
-                pointer-events: none;
-                content: "";
-                will-change: transform,opacity
-            }
-            
-            .mdc-header-button:before {
-                -webkit-transition: opacity 15ms linear;
-                transition: opacity 15ms linear
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded:after {
-                top: 0;
-                left: 0;
-                -webkit-transform: scale(0);
-                transform: scale(0);
-                -webkit-transform-origin: center center;
-                transform-origin: center center
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--unbounded:after {
-                top: var(--mdc-ripple-top,0);
-                left: var(--mdc-ripple-left,0)
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--foreground-activation:after {
-                -webkit-animation: 225ms mdc-ripple-fg-radius-in forwards,75ms mdc-ripple-fg-opacity-in forwards;
-                animation: 225ms mdc-ripple-fg-radius-in forwards,75ms mdc-ripple-fg-opacity-in forwards
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--foreground-deactivation:after {
-                -webkit-animation: .15s mdc-ripple-fg-opacity-out;
-                animation: .15s mdc-ripple-fg-opacity-out;
-                -webkit-transform: translate(var(--mdc-ripple-fg-translate-end,0)) scale(var(--mdc-ripple-fg-scale,1));
-                transform: translate(var(--mdc-ripple-fg-translate-end,0)) scale(var(--mdc-ripple-fg-scale,1))
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded:before,.mdc-header-button:after,.mdc-header-button:before {
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--unbounded:before,.mdc-header-button.mdc-ripple-upgraded:before {
-                -webkit-transform: scale(var(--mdc-ripple-fg-scale,0));
-                transform: scale(var(--mdc-ripple-fg-scale,0))
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--unbounded:before {
-                top: var(--mdc-ripple-top,0%);
-                left: var(--mdc-ripple-left,0%)
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--unbounded:before,.mdc-header-button.mdc-ripple-upgraded:after {
-                width: var(--mdc-ripple-fg-size,100%);
-                height: var(--mdc-ripple-fg-size,100%)
-            }
-            
-            .mdc-header-button:active {
-                outline: none
-            }
-            
-            .mdc-header-button:hover {
-                cursor: pointer
-            }
-            
-            .mdc-header-button::-moz-focus-inner {
-                padding: 0;
-                border: 0
-            }
-            
-            .mdc-header-button:disabled {
-                background-color: transparent;
-                color: rgba(0,0,0,.38);
-                color: var(--mdc-theme-text-disabled-on-light,rgba(0,0,0,.38));
-                cursor: default;
-                pointer-events: none
-            }
-            
-            .mdc-header-button--theme-dark .mdc-header-button:disabled,.mdc-theme--dark .mdc-header-button:disabled {
-                color: hsla(0,0%,100%,.5);
-                color: var(--mdc-theme-text-disabled-on-dark,hsla(0,0%,100%,.5))
-            }
-            
-            .mdc-header-button:not(:disabled) {
-                background-color: transparent;
-                color: #3f51b5;
-                color: var(--mdc-theme-primary,#3f51b5)
-            }
-            
-            .mdc-header-button:after,.mdc-header-button:before {
-                background-color: #3f51b5
-            }
-            
-            @supports not (-ms-ime-align:auto) {
-                .mdc-header-button:after,.mdc-header-button:before {
-                    background-color: var(--mdc-theme-primary,#3f51b5)
-                }
-            }
-            
-            .mdc-header-button:hover:before {
-                opacity: .04
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded--background-focused:before,.mdc-header-button:not(.mdc-ripple-upgraded):focus:before {
-                -webkit-transition-duration: 75ms;
-                transition-duration: 75ms;
-                opacity: .12
-            }
-            
-            .mdc-header-button:not(.mdc-ripple-upgraded):after {
-                -webkit-transition: opacity .15s linear;
-                transition: opacity .15s linear
-            }
-            
-            .mdc-header-button:not(.mdc-ripple-upgraded):active:after {
-                -webkit-transition-duration: 75ms;
-                transition-duration: 75ms;
-                opacity: .16
-            }
-            
-            .mdc-header-button.mdc-ripple-upgraded {
-                --mdc-ripple-fg-opacity:.16}
-            
-            .mdc-header-button--raised:disabled,.mdc-header-button--unelevated:disabled {
-                background-color: rgba(0,0,0,.12);
-                color: rgba(0,0,0,.38);
-                color: var(--mdc-theme-text-disabled-on-light,rgba(0,0,0,.38))
-            }
-            
-            .mdc-header-button--theme-dark .mdc-header-button--raised:disabled,.mdc-header-button--theme-dark .mdc-header-button--unelevated:disabled,.mdc-theme--dark .mdc-header-button--raised:disabled,.mdc-theme--dark .mdc-header-button--unelevated:disabled {
-                background-color: hsla(0,0%,100%,.12);
-                color: rgba(0,0,0,.38);
-                color: var(--mdc-theme-text-disabled-on-light,rgba(0,0,0,.38))
-            }
-            
-            .mdc-header-button--raised:not(:disabled),.mdc-header-button--unelevated:not(:disabled) {
-                background-color: #3f51b5
-            }
-            
-            @supports not (-ms-ime-align:auto) {
-                .mdc-header-button--raised:not(:disabled),.mdc-header-button--unelevated:not(:disabled) {
-                    background-color: var(--mdc-theme-primary,#3f51b5)
-                }
-            }
-            
-            .mdc-header-button--raised:not(:disabled),.mdc-header-button--unelevated:not(:disabled) {
-                color: #fff;
-                color: var(--mdc-theme-text-primary-on-primary,#fff)
-            }
-            
-            .mdc-header-button--raised:after,.mdc-header-button--raised:before,.mdc-header-button--unelevated:after,.mdc-header-button--unelevated:before {
-                background-color: #fff
-            }
-            
-            @supports not (-ms-ime-align:auto) {
-                .mdc-header-button--raised:after,.mdc-header-button--raised:before,.mdc-header-button--unelevated:after,.mdc-header-button--unelevated:before {
-                    background-color: var(--mdc-theme-text-primary-on-primary,#fff)
-                }
-            }
-            
-            .mdc-header-button--raised:hover:before,.mdc-header-button--unelevated:hover:before {
-                opacity: .08
-            }
-            
-            .mdc-header-button--raised.mdc-ripple-upgraded--background-focused:before,.mdc-header-button--raised:not(.mdc-ripple-upgraded):focus:before,.mdc-header-button--unelevated.mdc-ripple-upgraded--background-focused:before,.mdc-header-button--unelevated:not(.mdc-ripple-upgraded):focus:before {
-                -webkit-transition-duration: 75ms;
-                transition-duration: 75ms;
-                opacity: .24
-            }
-            
-            .mdc-header-button--raised:not(.mdc-ripple-upgraded):after,.mdc-header-button--unelevated:not(.mdc-ripple-upgraded):after {
-                -webkit-transition: opacity .15s linear;
-                transition: opacity .15s linear
-            }
-            
-            .mdc-header-button--raised:not(.mdc-ripple-upgraded):active:after,.mdc-header-button--unelevated:not(.mdc-ripple-upgraded):active:after {
-                -webkit-transition-duration: 75ms;
-                transition-duration: 75ms;
-                opacity: .32
-            }
-            
-            .mdc-header-button--raised.mdc-ripple-upgraded,.mdc-header-button--unelevated.mdc-ripple-upgraded {
-                --mdc-ripple-fg-opacity:.32}
-            
-            .mdc-header-button--raised {
-                -webkit-box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
-                box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
-                -webkit-transition: -webkit-box-shadow .28s cubic-bezier(.4,0,.2,1);
-                transition: -webkit-box-shadow .28s cubic-bezier(.4,0,.2,1);
-                transition: box-shadow .28s cubic-bezier(.4,0,.2,1);
-                transition: box-shadow .28s cubic-bezier(.4,0,.2,1),-webkit-box-shadow .28s cubic-bezier(.4,0,.2,1);
-                will-change: box-shadow
-            }
-            
-            .mdc-header-button--raised:focus,.mdc-header-button--raised:hover {
-                -webkit-box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
-                box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12)
-            }
-            
-            .mdc-header-button--raised:active {
-                -webkit-box-shadow: 0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12);
-                box-shadow: 0 5px 5px -3px rgba(0,0,0,.2),0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12)
-            }
-            
-            .mdc-header-button--raised:disabled {
-                -webkit-box-shadow: 0 0 0 0 rgba(0,0,0,.2),0 0 0 0 rgba(0,0,0,.14),0 0 0 0 rgba(0,0,0,.12);
-                box-shadow: 0 0 0 0 rgba(0,0,0,.2),0 0 0 0 rgba(0,0,0,.14),0 0 0 0 rgba(0,0,0,.12)
-            }
-            
-            .mdc-header-button--stroked {
-                border-style: solid;
-                padding-right: 14px;
-                padding-left: 14px;
-                border-width: 2px;
-                line-height: 32px
-            }
-            
-            .mdc-header-button--stroked:disabled {
-                border-color: rgba(0,0,0,.38);
-                border-color: var(--mdc-theme-text-disabled-on-light,rgba(0,0,0,.38))
-            }
-            
-            .mdc-header-button--theme-dark .mdc-header-button--stroked:disabled,.mdc-theme--dark .mdc-header-button--stroked:disabled {
-                border-color: hsla(0,0%,100%,.5);
-                border-color: var(--mdc-theme-text-disabled-on-dark,hsla(0,0%,100%,.5))
-            }
-            
-            .mdc-header-button--stroked.mdc-header-button--dense {
-                line-height: 27px
-            }
-            
-            .mdc-header-button--stroked.mdc-header-button--compact {
-                padding-right: 6px;
-                padding-left: 6px
-            }
-            
-            .mdc-header-button--stroked:not(:disabled) {
-                border-color: #3f51b5;
-                border-color: var(--mdc-theme-primary,#3f51b5)
-            }
-            
-            .mdc-header-button--compact {
-                padding: 0 8px
-            }
-            
-            .mdc-header-button--dense {
-                height: 32px;
-                font-size: .8125rem;
-                line-height: 32px
-            }
-            
-            .mdc-header-button__icon {
-                display: inline-block;
-                width: 18px;
-                height: 18px;
-                margin-right: 8px;
-                font-size: 18px;
-                line-height: inherit;
-                vertical-align: top
+            .firebaseui-container {
+                max-width: 720px !important;
             }
         </style>
         <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
@@ -344,7 +36,6 @@
                 messagingSenderId: "690176352805"
               };
               firebase.initializeApp(config);
-              //var CLIENT_ID = '114460382081-53ktfbndbtve0imgm2qsm8cqvbopgsga.apps.googleusercontent.com';
         </script>
         <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
         <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
@@ -352,7 +43,10 @@
             var uiConfig = {
                 signInSuccessUrl: '#',
                 signInOptions: [
-                    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+                    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+                    firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+                    firebase.auth.GithubAuthProvider.PROVIDER_ID,
                 ],
                 tosUrl: 'tos.html'
             };
@@ -372,16 +66,26 @@
                     <img id="user-pic" class="mdc-card__media-item">
                 </div>
                 <section class="mdc-card__actions">
-                    <div id="firebaseui-auth-container"></div>                        
-                    <button id="sign-out" class="mdc-header-button mdc-button--compact mdc-card__action">Sign out</button>
-                    <button id="change-master-password" class="mdc-header-button mdc-button--compact mdc-card__action">Change password</button>
-                    <button id="import-export-data-button" class="mdc-header-button mdc-button--compact mdc-card__action">Import/Export</button>
+                    <div id="firebaseui-auth-container"></div>
                 </section>
+                <div style="display:flex;">
+                    <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
+                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
+                    <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
+                </div>
             </div>
         </header>
         <main>
             <h1 class="mdc-typography--display1">Passwords</h1>
             <button id="new-password" class="mdc-button mdc-button--compact mdc-card__action" disabled>New</button>
+            <!--Sort:
+            <select id="sortOptions">
+                <option>A-Z</option>
+                <option>Z-A</option>
+            </select-->
+            <div style="float:right;">
+                Filter: <input type="text" id="searchBox"/><br/>
+            </div>
             <div id="passwords">
             </div>
             <div id="message-snackbar"

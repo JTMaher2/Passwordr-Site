@@ -21,7 +21,6 @@ function Passwordr() {
     this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
     this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
     this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');    
-    
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
@@ -30,6 +29,8 @@ function Passwordr() {
     this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
+    this.searchBox = document.getElementById('searchBox');
+    //this.sortOptions = document.getElementById('sortOptions');
 
     var passwordr = this;
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
@@ -72,8 +73,45 @@ function Passwordr() {
     this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
     this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
+    $(this.searchBox).on('input', function() {
+        passwordr.filterList($(this).val());
+    });
+    /*$(this.sortOptions).on('change', function() {
+        passwordr.sortList($('#sortOptions :selected').text());
+    });*/
 
     this.initFirebase();
+};
+
+// filter the password list based on what user entered in search box
+Passwordr.prototype.filterList = function(text) {
+    $('.name').each(function() {
+        // if it doesn't match user input
+        var curElem = $(this);
+        var curElemTextParts = curElem.text().split(' ');
+
+        for (var i = 0; i < curElemTextParts.length; i++) {
+            if (curElemTextParts[i].substring(0, text.length).toLowerCase() != text.toLowerCase()) {
+                $(curElem).parent().parent().children().each(function() {
+                    $(this).css('display', 'none');
+                });
+            } else {
+                $(curElem).parent().parent().children().each(function() {
+                    $(this).css('display', '');
+                });
+            }
+        }
+    });
+};
+
+// sort the list in a certain fashion
+Passwordr.prototype.sortList = function(sortOption) {
+    switch (sortOption) {
+        case 'A-Z':
+            break;
+        case 'Z-A':
+            break;
+    }
 };
 
 // Checks that the Firebase SDK has been correctly setup and configured
@@ -92,16 +130,6 @@ Passwordr.prototype.initFirebase = function() {
     
     // Initiate Firebase Auth, and listen to auth state changes
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
-};
-
-// Signs-in to Passwordr
-Passwordr.prototype.signIn = function() {
-    // Sign in to Firebase using popup auth and Google as the identity provider
-    var provider = new firebase.auth.GoogleAuthProvider();
-    this.auth.signInWithPopup(provider).then(function(result) {
-        console.log(result.credential.accessToken);
-        console.log(result.user);
-    }.bind(this));
 };
 
 // Signs-out of Passwordr

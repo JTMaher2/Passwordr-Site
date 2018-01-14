@@ -30,7 +30,7 @@ function Passwordr() {
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
     this.searchBox = document.getElementById('searchBox');
-    //this.sortOptions = document.getElementById('sortOptions');
+    this.sortOptions = document.getElementById('sortOptions');
 
     var passwordr = this;
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
@@ -76,9 +76,9 @@ function Passwordr() {
     $(this.searchBox).on('input', function() {
         passwordr.filterList($(this).val());
     });
-    /*$(this.sortOptions).on('change', function() {
+    $(this.sortOptions).on('change', function() {
         passwordr.sortList($('#sortOptions :selected').text());
-    });*/
+    });
 
     this.initFirebase();
 };
@@ -104,13 +104,59 @@ Passwordr.prototype.filterList = function(text) {
     });
 };
 
-// sort the list in a certain fashion
-Passwordr.prototype.sortList = function(sortOption) {
-    switch (sortOption) {
-        case 'A-Z':
-            break;
-        case 'Z-A':
-            break;
+// sort the list in a certain way
+Passwordr.prototype.sortList = function(order) {
+    var passwordr = this;
+    var names = [];
+
+    $('.password_template').each(function(){
+        names.push($(this).find('.name').text().toLowerCase());
+    });
+    
+    names.sort();
+    
+    if (order == 'Z-A') {
+        names = names.reverse();
+    }
+
+    var numInserted = 0;
+
+    for (var i = 0; i < names.length; i++)
+    {
+        $('.password_template').each(function(){
+            var key = this.id;
+            // check if the current password is the next password to be put in list
+            if ($(this).find('.name').text().toLowerCase() == names[i]){
+                // make new div with password template
+                var newPasswordCard = document.createElement('div');
+                newPasswordCard.innerHTML = Passwordr.PASSWORD_TEMPLATE.substring(Passwordr.PASSWORD_TEMPLATE.indexOf('>') + 1, Passwordr.PASSWORD_TEMPLATE.lastIndexOf('</div>'));
+                newPasswordCard.firstChild.setAttribute('id', key);
+
+                // assign values to template
+                var passwordSection = $(newPasswordCard).find('.password');
+
+                passwordSection.text($($(this).find('.password')).text());
+                passwordSection.prop('hidden', true);
+                $(newPasswordCard).find('.url').text($($(this).find('.url')).text());
+                $(newPasswordCard).find('.note').text($($(this).find('.note')).text());
+                $(newPasswordCard).find('.name').text($($(this).find('.name')).text());
+    
+                // add event handlers to buttons
+                var revealBtn = newPasswordCard.querySelector('.reveal');
+                revealBtn.addEventListener('click', passwordr.revealPassword.bind(this, passwordSection, revealBtn));
+                var editBtn = newPasswordCard.querySelector('.edit');
+                editBtn.addEventListener('click', passwordr.editPassword.bind(this, $(newPasswordCard).find('.name'), $(newPasswordCard).find('.url'), $(newPasswordCard).find('.password'), $(newPasswordCard).find('.note'), editBtn, revealBtn, key));
+                newPasswordCard.querySelector('.delete').addEventListener('click', passwordr.deletePasswordButtonClicked.bind(this, key));
+
+                // append template to nth slot after beginning of list
+                passwordr.passwordList.insertBefore(newPasswordCard, $(passwordr.passwordList).children()[numInserted]);
+
+                // delete original card
+                $(this).remove();
+    
+                numInserted++;
+            }
+        });
     }
 };
 
@@ -435,6 +481,7 @@ Passwordr.prototype.setMasterPassword = function() {
                 passwordr.decryptCSV(noteSection);
                 noteSection.prop('hidden', false);  
             });
+            //passwordr.sortList('A-Z');
         }).catch(function(err) {
             var data = {
                 message: 'Import error: ' + err,
@@ -815,7 +862,11 @@ Passwordr.prototype.decryptCSV = function(elem) {
 
 // Reveals a hidden password
 Passwordr.prototype.revealPassword = function(passwordSection, revealBtn) {
-    passwordSection.hidden = false;
+    if (passwordSection.hidden != null) {
+        passwordSection.hidden = false;
+    } else {
+        passwordSection.prop('hidden', false);
+    }
     revealBtn.disabled = true;
 };
 

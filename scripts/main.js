@@ -85,6 +85,16 @@ function Passwordr() {
 
 // filter the password list based on what user entered in search box
 Passwordr.prototype.filterList = function(text) {
+    // if user has cleared search box, reveal everything
+    if (text == '')
+    {
+        $('.name').each(function() {
+            $(this).parent().parent().children().each(function() {
+                $(this).css('display', '');
+            });
+        });
+    }
+
     $('.name').each(function() {
         // if it doesn't match user input
         var curElem = $(this);
@@ -96,6 +106,7 @@ Passwordr.prototype.filterList = function(text) {
                     $(this).css('display', 'none');
                 });
             } else {
+                break; // there is no need to continue
                 $(curElem).parent().parent().children().each(function() {
                     $(this).css('display', '');
                 });
@@ -131,6 +142,7 @@ Passwordr.prototype.sortList = function(order) {
                 var newPasswordCard = document.createElement('div');
                 newPasswordCard.innerHTML = Passwordr.PASSWORD_TEMPLATE.substring(Passwordr.PASSWORD_TEMPLATE.indexOf('>') + 1, Passwordr.PASSWORD_TEMPLATE.lastIndexOf('</div>'));
                 newPasswordCard.firstChild.setAttribute('id', key);
+                $(newPasswordCard).prop('class', 'mdc_card password_template');
 
                 // assign values to template
                 var passwordSection = $(newPasswordCard).find('.password');
@@ -481,7 +493,7 @@ Passwordr.prototype.setMasterPassword = function() {
                 passwordr.decryptCSV(noteSection);
                 noteSection.prop('hidden', false);  
             });
-            //passwordr.sortList('A-Z');
+            setTimeout(function() {passwordr.sortList('A-Z');}, 1000); // setTimeout is necessary, because otherwise the sorting will be done before list has been decrypted
         }).catch(function(err) {
             var data = {
                 message: 'Import error: ' + err,

@@ -106,10 +106,10 @@ Passwordr.prototype.filterList = function(text) {
                     $(this).css('display', 'none');
                 });
             } else {
-                break; // there is no need to continue
                 $(curElem).parent().parent().children().each(function() {
                     $(this).css('display', '');
                 });
+                break; // there is no need to continue
             }
         }
     });

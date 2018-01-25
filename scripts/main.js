@@ -141,7 +141,7 @@ Passwordr.prototype.sortList = function(order) {
                 // make new div with password template
                 var newPasswordCard = document.createElement('div');
                 newPasswordCard.innerHTML = Passwordr.PASSWORD_TEMPLATE.substring(Passwordr.PASSWORD_TEMPLATE.indexOf('>') + 1, Passwordr.PASSWORD_TEMPLATE.lastIndexOf('</div>'));
-                newPasswordCard.firstChild.setAttribute('id', key);
+                newPasswordCard.setAttribute('id', key);
                 $(newPasswordCard).prop('class', 'mdc_card password_template');
 
                 // assign values to template
@@ -157,7 +157,7 @@ Passwordr.prototype.sortList = function(order) {
                 var revealBtn = newPasswordCard.querySelector('.reveal');
                 revealBtn.addEventListener('click', passwordr.revealPassword.bind(this, passwordSection, revealBtn));
                 var editBtn = newPasswordCard.querySelector('.edit');
-                editBtn.addEventListener('click', passwordr.editPassword.bind(this, $(newPasswordCard).find('.name'), $(newPasswordCard).find('.url'), $(newPasswordCard).find('.password'), $(newPasswordCard).find('.note'), editBtn, revealBtn, key));
+                editBtn.addEventListener('click', passwordr.editPassword.bind(this, newPasswordCard.querySelector('.name'), newPasswordCard.querySelector('.url'), newPasswordCard.querySelector('.password'), newPasswordCard.querySelector('.note'), editBtn, revealBtn, key));
                 newPasswordCard.querySelector('.delete').addEventListener('click', passwordr.deletePasswordButtonClicked.bind(this, key));
 
                 // append template to nth slot after beginning of list
@@ -367,9 +367,9 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                 passwordr.messageSnackbar.show(data);
             });
 
-        }).catch(function(err) {
+        }).catch(function(error) {
             var data = {
-                message: 'Error encrypting URL: ' + err,
+                message: 'Error encrypting URL: ' + error,
                 timeout: 2000,
                 actionText: 'OK',
                 actionHandler: function() {
@@ -377,7 +377,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
             };
             passwordr.messageSnackbar.show(data);
         });
-    }).catch(function(err) {
+    }).catch(function(error) {
         var data = {
             message: 'Error encrypting name: ' + error,
             timeout: 2000,
@@ -526,7 +526,7 @@ Passwordr.prototype.changeMasterPassword = function() {
 
     if (masterPassword.val() != null) {
         if (masterPassword.val() == confirmMasterPassword.val()) {
-            if (masterPassword.val().length >= 8 && masterPassword.val().match(/\d+/g) != null && masterPassword.val().match(/\W+/g) != null) {
+            if (masterPassword.val().length >= 8 && masterPassword.val().match(/[a-zA-Z]/) != null && masterPassword.val().match(/\d+/g) != null && masterPassword.val().match(/\W+/g) != null) {
                 while (masterPassword.val().length < 32) {
                     masterPassword.val(masterPassword.val() + '0');
                 }
@@ -568,7 +568,7 @@ Passwordr.prototype.changeMasterPassword = function() {
                 });
             } else {
                 var data = {
-                    message: 'Password must be at least 8 characters long, must contain at least 1 number, and must contain at least 1 special character.',
+                    message: 'Password must be >= 8 characters long, and must have >= 1 one letter, >= 1 number, and >= 1 symbol.',
                     timeout: 2000,
                     actionText: 'OK',
                     actionHandler: function() {
@@ -931,7 +931,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
     } else {
         // Check that the user entered at least a name and password, and that the user is signed in
         if (newName != '' || newUrl != '') {
-            if (newPassword.length >= 8 && newPassword.match(/\d+/g) != null && newPassword.match(/\W+/g) != null) {
+            if (newPassword.length >= 8 && newPassword.match(/[a-zA-Z]/) != null && newPassword.match(/\d+/g) != null && newPassword.match(/\W+/g) != null) {
                 // update Firebase
                 if (newName == '') {
                     newName = ' ';
@@ -945,7 +945,7 @@ Passwordr.prototype.saveChanges = function(editBtn, revealBtn, nameHeader, nameT
                 passwordr.encrypt(newName, newUrl, newPassword, newNote, key);
             } else {
                 var data = {
-                    message: 'Password must be at least 8 characters long, must contain at least 1 number, and must contain at least 1 special character.',
+                    message: 'Password must be >= 8 characters long, and must have >= 1 one letter, >= 1 number, and >= 1 symbol.',
                     timeout: 2000,
                     actionText: 'OK',
                     actionHandler: function() {
@@ -994,7 +994,8 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     var passwordTextfield = document.createElement('div');
     passwordTextfield.innerHTML = Passwordr.TEXTFIELD_TEMPLATE;
     $(passwordTextfield).prop('id', 'add-existing-password-input');
-    passwordSection.removeAttribute('hidden'); // reveal password
+    passwordSection.removeAttribute('hidden');
+
     oldPassword = passwordSection.textContent;
     passwordTextfield.querySelector('.mdc-textfield__input').value = oldPassword;
     passwordSection.textContent = "";
@@ -1007,10 +1008,13 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
     $(genBtn).prop('class', 'mdc-button mdc-dialog__footer__button mdc-ripple-upgraded');
     $(genBtn).prop('style', '--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;');
     $(genBtn).text('Generate');
-    passwordSection.appendChild(genBtn);
+
+    // insert button between password input and bottom line
+    var passwordTextfield = passwordSection.querySelector('div').querySelector('div');
+    passwordTextfield.insertBefore(genBtn, passwordTextfield.lastChild);
 
     this.generateExistingPasswordButton = document.getElementById('generate-existing-password-button');
-    this.generateExistingPasswordButton.addEventListener('click', this.generatePassword.bind(this, passwordTextfield.querySelector('.mdc-textfield__input'), null));
+    this.generateExistingPasswordButton.addEventListener('click', passwordr.generatePassword.bind(this, passwordTextfield.querySelector('.mdc-textfield__input'), null));
 
     var oldNote = "";
     // make note section editable
@@ -1026,7 +1030,7 @@ Passwordr.prototype.editPassword = function(nameHeader, urlHeader, passwordSecti
         var newEditBtn = editBtn.cloneNode(true);
     
         editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-        newEditBtn.addEventListener('click', this.saveChanges.bind(this, newEditBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key));
+        newEditBtn.addEventListener('click', passwordr.saveChanges.bind(passwordr, newEditBtn, revealBtn, nameHeader, nameTextfield, urlHeader, urlTextfield, oldPassword, passwordSection, oldNote, noteSection, key));
     }
 };
 

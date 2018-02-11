@@ -249,7 +249,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
     var passwordr = this;
 
     // name
-    var nameIV = window.crypto.getRandomValues(new Uint8Array(12));
+    var nameIV = window.crypto.getRandomValues(new Int8Array(12));
     window.crypto.subtle.encrypt(
         {
             name: "AES-GCM",
@@ -262,7 +262,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
         new StringView(name).buffer
     ).then(function(encryptedName) {
         // URL
-        var urlIV = window.crypto.getRandomValues(new Uint8Array(12));
+        var urlIV = window.crypto.getRandomValues(new Int8Array(12));
         window.crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
@@ -275,7 +275,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
             new StringView(url).buffer
         ).then(function(encryptedUrl) {
             // password
-            var passwordIV = window.crypto.getRandomValues(new Uint8Array(12));            
+            var passwordIV = window.crypto.getRandomValues(new Int8Array(12));            
             window.crypto.subtle.encrypt(
                 {
                     name: "AES-GCM",
@@ -288,7 +288,7 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                 new StringView(password).buffer
             ).then(function(encryptedPassword) {
                 // note
-                var noteIV = window.crypto.getRandomValues(new Uint8Array(12));                
+                var noteIV = window.crypto.getRandomValues(new Int8Array(12));                
                 window.crypto.subtle.encrypt(
                     {
                         name: "AES-GCM",
@@ -300,10 +300,10 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                     passwordr.encryptionKey,
                     new StringView(note).buffer
                 ).then(function(encryptedNote) {                    
-                    var encryptedEncodedName = new Uint8Array(encryptedName);
-                    var encryptedEncodedUrl = new Uint8Array(encryptedUrl);
-                    var encryptedEncodedPassword = new Uint8Array(encryptedPassword);
-                    var encryptedEncodedNote = new Uint8Array(encryptedNote);
+                    var encryptedEncodedName = new Int8Array(encryptedName);
+                    var encryptedEncodedUrl = new Int8Array(encryptedUrl);
+                    var encryptedEncodedPassword = new Int8Array(encryptedPassword);
+                    var encryptedEncodedNote = new Int8Array(encryptedNote);
 
                     var nameWithIV = passwordr.bufferToCSV(nameIV, nameIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedName, encryptedEncodedName.length);
                     var urlWithIV = passwordr.bufferToCSV(urlIV, urlIV.length) + ',' + passwordr.bufferToCSV(encryptedEncodedUrl, encryptedEncodedUrl.length);
@@ -818,7 +818,7 @@ Passwordr.TEXTFIELD_TEMPLATE =
 // Decrypts a CSV field, and updates the specified element with the decrypted data
 Passwordr.prototype.decryptCSV = function(elem) {
     const ivLen = 12;
-    var iv = new Uint8Array(ivLen);
+    var iv = new Int8Array(ivLen);
     var passwordr = this;
     if (elem.textContent != null) { // no jQuery
         var csv = elem.textContent.split(',');        
@@ -831,7 +831,7 @@ Passwordr.prototype.decryptCSV = function(elem) {
             iv[i] = csv[i];
         }
 
-        var data = new Uint8Array(csv.length - ivLen);
+        var data = new Int8Array(csv.length - ivLen);
 
         var dataIndex = 0;
         for (var i = ivLen; i < csv.length; i++) {

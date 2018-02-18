@@ -1051,7 +1051,7 @@ Passwordr.prototype.deletePassword = function(key) {
 
 // Actions that occur when a user clicks a password's "Delete" button
 Passwordr.prototype.deletePasswordButtonClicked = function(key) {
-    if (this.checkSignedIn()) {
+    if (passwordr.checkSignedIn()) {
         // show the confirm delete dialog
         this.confirmDeletePasswordButton.addEventListener('click', this.deletePassword.bind(this, key));
         this.confirmDeletePasswordDialog.show();

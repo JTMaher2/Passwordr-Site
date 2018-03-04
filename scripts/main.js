@@ -29,8 +29,12 @@ function Passwordr() {
     this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
+    this.encryptingPasswordsDialog = new MDCDialog(document.getElementById('encrypting-passwords-dialog'));
     this.searchBox = document.getElementById('searchBox');
     this.sortOptions = document.getElementById('sortOptions');
+
+    this.numPasswords = 0;
+    this.numEncrypted = 0;
 
     var passwordr = this;
     this.newPasswordDialog.listen('MDCDialog:accept', function() {
@@ -318,7 +322,13 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                             password: passwordWithIV,
                             note: noteWithIV,
                             userid: passwordr.auth.currentUser.uid
-                        }).catch(function(error) {
+                        }).then(function() {
+                            passwordr.numEncrypted++;
+                            if (passwordr.numEncrypted == passwordr.numPasswords) {
+                                window.location.reload(true);
+                            }
+                        })
+                        .catch(function(error) {
                             var data = {
                                 message: 'Error adding password: ' + error,
                                 timeout: 2000,
@@ -334,6 +344,11 @@ Passwordr.prototype.encrypt = function(name, url, password, note, key) {
                             url: urlWithIV,
                             password: passwordWithIV,
                             note: noteWithIV
+                        }).then(function() {
+                            passwordr.numEncrypted++;
+                            if (passwordr.numEncrypted == passwordr.numPasswords) {
+                                window.location.reload(true);
+                            }
                         })
                         .catch(function(error) {
                             var data = {
@@ -542,7 +557,12 @@ Passwordr.prototype.changeMasterPassword = function() {
                 ).then(function(key) {
                     passwordr.encryptionKey = key;
                     
-                    // re-encrypt all fields
+                    passwordr.encryptingPasswordsDialog.show(); // show "Please wait..." dialog
+
+                    passwordr.numPasswords = $('.password_template').length;
+                    passwordr.numEncrypted = 0;
+
+                    // re-encrypt all passwords' fields
                     $('.password_template').each(function() {
                         var current_password = $(this);
 
@@ -551,11 +571,9 @@ Passwordr.prototype.changeMasterPassword = function() {
                         var noteSection = current_password.find('.note');
                         var passwordSection = current_password.find('.password');
 
-                        // re-encrypt it
+                        // re-encrypt field with new password
                         passwordr.encrypt(nameHeader.text(), urlHeader.text(), passwordSection.text(), noteSection.text(), current_password.attr('id')); // the id is the key                  
                     });
-
-                    //window.location.reload(); // refresh the page
                 }).catch(function(err) {
                     var data = {
                         message: 'Import error: ' + err,

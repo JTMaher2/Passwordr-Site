@@ -555,7 +555,7 @@ Passwordr.prototype.changeMasterPassword = function() {
                         passwordr.encrypt(nameHeader.text(), urlHeader.text(), passwordSection.text(), noteSection.text(), current_password.attr('id')); // the id is the key                  
                     });
 
-                    window.location.reload(); // refresh the page
+                    //window.location.reload(); // refresh the page
                 }).catch(function(err) {
                     var data = {
                         message: 'Import error: ' + err,

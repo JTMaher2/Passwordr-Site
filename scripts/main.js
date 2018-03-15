@@ -11,16 +11,19 @@ function Passwordr() {
     this.passwordList = document.getElementById('passwords');    
     this.signOutButton = document.getElementById('sign-out');
     this.changeMasterPasswordButton = document.getElementById('change-master-password');
-    this.importExportDataButton = document.getElementById('import-export-data-button');  
+    this.importExportDataButton = document.getElementById('import-export-data-button');
     this.importXMLButton = document.getElementById('import-xml-button');
     this.importJSONButton = document.getElementById('import-json-button');
     this.importKeePassXMLButton = document.getElementById('import-keepass-xml-button');    
     this.exportXMLButton = document.getElementById('export-xml-button');
-    this.exportJSONButton = document.getElementById('export-json-button');    
+    this.exportJSONButton = document.getElementById('export-json-button');
     this.newPasswordButton = document.getElementById('new-password');
     this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
     this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
-    this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');    
+    this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');
+    this.checkPwnedButton = document.getElementById('check-pwned-button');
+    this.confirmCheckPwnedButton = document.getElementById('confirm-check-pwned-button');
+
     this.userPic = document.getElementById('user-pic');    
     this.userName = document.getElementById('user-name');    
     this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
@@ -28,6 +31,7 @@ function Passwordr() {
     this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
     this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
+    this.checkPwnedDialog = new MDCDialog(document.getElementById('check-pwned-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
     this.encryptingPasswordsDialog = new MDCDialog(document.getElementById('encrypting-passwords-dialog'));
     this.searchBox = document.getElementById('searchBox');
@@ -56,6 +60,10 @@ function Passwordr() {
         passwordr.importExportDataDialog.lastFocusedTarget = evt.target;
         passwordr.importExportDataDialog.show();
     });
+    this.checkPwnedButton.addEventListener('click', function (evt) {
+        passwordr.checkPwnedDialog.lastFocusedTarget = evt.target;
+        passwordr.checkPwnedDialog.show();
+    });
 
     this.newPasswordButton.addEventListener('click', function (evt) {
         passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
@@ -77,6 +85,7 @@ function Passwordr() {
     this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
     this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
+    this.confirmCheckPwnedButton.addEventListener('click', this.checkPwned.bind(this));
     $(this.searchBox).on('input', function() {
         passwordr.filterList($(this).val());
     });
@@ -772,6 +781,38 @@ Passwordr.prototype.exportXML = function() {
     link.classList.add('dragout');
 
     link.click();
+};
+
+// converts a plaintext password into a hex SHA-1 hash
+Passwordr.prototype.getSHA1 = function(password) {
+    var shaObj = new jsSHA("SHA-1", "TEXT");
+    shaObj.update(password);
+    return shaObj.getHash("HEX");
+};
+
+// checks all passwords against PwnedPasswords API
+Passwordr.prototype.checkPwned = function() {
+    var password = $('.password_template').eq(0).text();/*each(function() {*/
+        //var password = $(this).find('.password').text();
+
+        var hashedPassword = passwordr.getSHA1(password);
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              var matches = this.responseText.split('\n');
+
+              matches.forEach(function(match) {
+                if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                    console.log('Pwned! # of appearances: ' + match.substring(match.indexOf(':') + 1));
+                    return;
+                }
+              });
+            }
+        };
+        xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+        xhttp.send();
+    /*});*/
 };
 
 // export data to a JSON file

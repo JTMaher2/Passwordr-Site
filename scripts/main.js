@@ -21,6 +21,7 @@ function Passwordr() {
     this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
     this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
     this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');
+    this.confirmCheckPwnedPasswordButton = document.getElementById('confirm-check-pwned-password-button');
     this.checkPwnedButton = document.getElementById('check-pwned-button');
     this.confirmCheckPwnedButton = document.getElementById('confirm-check-pwned-button');
 
@@ -33,6 +34,8 @@ function Passwordr() {
     this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
     this.checkPwnedDialog = new MDCDialog(document.getElementById('check-pwned-dialog'));
     this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
+    this.confirmCheckPwnedPasswordDialog = new MDCDialog(document.getElementById('confirm-check-pwned-password-dialog'));
+
     this.encryptingPasswordsDialog = new MDCDialog(document.getElementById('encrypting-passwords-dialog'));
     this.searchBox = document.getElementById('searchBox');
     this.sortOptions = document.getElementById('sortOptions');
@@ -85,7 +88,7 @@ function Passwordr() {
     this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
     this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
-    this.confirmCheckPwnedButton.addEventListener('click', this.checkPwned.bind(this));
+    this.confirmCheckPwnedButton.addEventListener('click', this.checkAllPwnedPasswords.bind(this));
     $(this.searchBox).on('input', function() {
         passwordr.filterList($(this).val());
     });
@@ -172,6 +175,7 @@ Passwordr.prototype.sortList = function(order) {
                 var editBtn = newPasswordCard.querySelector('.edit');
                 editBtn.addEventListener('click', passwordr.editPassword.bind(this, newPasswordCard.querySelector('.name'), newPasswordCard.querySelector('.url'), newPasswordCard.querySelector('.password'), newPasswordCard.querySelector('.note'), editBtn, revealBtn, key));
                 newPasswordCard.querySelector('.delete').addEventListener('click', passwordr.deletePasswordButtonClicked.bind(this, key));
+                newPasswordCard.querySelector('.check').addEventListener('click', passwordr.checkPwnedPasswordButtonClicked.bind(this, key));
 
                 // append template to nth slot after beginning of list
                 passwordr.passwordList.insertBefore(newPasswordCard, $(passwordr.passwordList).children()[numInserted]);
@@ -791,9 +795,10 @@ Passwordr.prototype.getSHA1 = function(password) {
 };
 
 // checks all passwords against PwnedPasswords API
-Passwordr.prototype.checkPwned = function() {
-    var password = $('.password_template').eq(0).text();/*each(function() {*/
-        //var password = $(this).find('.password').text();
+Passwordr.prototype.checkAllPwnedPasswords = function() {
+    $('.password_template').each(function() {
+        var passwordCard = $(this);
+        var password = passwordCard.find('.password').text();
 
         var hashedPassword = passwordr.getSHA1(password);
 
@@ -804,15 +809,21 @@ Passwordr.prototype.checkPwned = function() {
 
               matches.forEach(function(match) {
                 if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
-                    console.log('Pwned! # of appearances: ' + match.substring(match.indexOf(':') + 1));
+                    passwordCard.css('background-color', 'red'); // pwned
                     return;
+                } else {
+                    numNonMatching++;
                 }
               });
+
+              if (numNonMatching == matches.length) {
+                  passwordCard.css('background-color', 'green'); // not pwned
+              }
             }
         };
         xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
         xhttp.send();
-    /*});*/
+    });
 };
 
 // export data to a JSON file
@@ -864,6 +875,7 @@ Passwordr.PASSWORD_TEMPLATE =
         '<button class="reveal mdc-button mdc-button--compact mdc-card__action">Show</button>' +    
         '<button class="edit mdc-button mdc-button--compact mdc-card__action">Edit</button>' +
         '<button class="delete mdc-button mdc-button--compact mdc-card__action">Delete</button>' +
+        '<button class="check mdc-button mdc-button--compact mdc-card__action">Check</button>' +
     '</section>' +
 '</div>';
 
@@ -1108,13 +1120,58 @@ Passwordr.prototype.deletePassword = function(key) {
     });
 };
 
+// attempt to check a password against the Pwned Passwords API
+Passwordr.prototype.checkPwnedPassword = function(key) {
+    $('.password_template').each(function() {
+        var passwordCard = $(this);
+
+        if (passwordCard.prop('id') == key) {
+            var password = passwordCard.find('.password').text();
+
+            var hashedPassword = passwordr.getSHA1(password);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var matches = this.responseText.split('\n');
+                    var numNonMatching = 0;
+
+                    matches.forEach(function(match) {
+                        if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                            passwordCard.css('background-color', 'red'); // pwned
+                            return;
+                        } else {
+                            numNonMatching++;
+                        }
+                    });
+
+                    if (numNonMatching == matches.length) {
+                        passwordCard.css('background-color', 'green'); // not pwned
+                    }
+                }
+            };
+            xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+            xhttp.send();
+        }
+    });
+};
+
 // Actions that occur when a user clicks a password's "Delete" button
 Passwordr.prototype.deletePasswordButtonClicked = function(key) {
     if (passwordr.checkSignedIn()) {
         // show the confirm delete dialog
-        this.confirmDeletePasswordButton.addEventListener('click', this.deletePassword.bind(this, key));
-        this.confirmDeletePasswordDialog.show();
+        passwordr.confirmDeletePasswordButton.addEventListener('click', passwordr.deletePassword.bind(this, key));
+        passwordr.confirmDeletePasswordDialog.show();
     }   
+};
+
+// Actions that occur when a user clicks a password's "Check" button
+Passwordr.prototype.checkPwnedPasswordButtonClicked = function(key) {
+    if (passwordr.checkSignedIn()) {
+        // show the confirm check password dialog
+        passwordr.confirmCheckPwnedPasswordButton.addEventListener('click', passwordr.checkPwnedPassword.bind(this, key));
+        passwordr.confirmCheckPwnedPasswordDialog.show();
+    }
 };
 
 // Display a password in the UI

@@ -73,7 +73,7 @@
                     <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
                     <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
                     <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
-                    <button id="check-pwned-button" class="mdc-button mdc-button--compact mdc-card__action">Have I Been Pwned?</button>
+                    <button id="check-pwned-button" class="mdc-button mdc-button--compact mdc-card__action">Check All</button>
                 </div>
             </div>
         </header>
@@ -84,9 +84,6 @@
             <select id="sortOptions">
                 <option>A-Z</option>
                 <option>Z-A</option>
-                <!-- <option>Newest</option>
-                <option>Oldest</option>
-                <option>Category</option> -->
             </select>
             <div style="float:right;">
                 Filter: <input type="text" id="searchBox"/><br/>
@@ -234,11 +231,11 @@
                 <div class="mdc-dialog__surface">
                     <header class="mdc-dialog__header">
                         <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Have I Been Pwned?
+                            Are you sure you want to check all of your passwords against the Pwned Passwords API?
                         </h2>
                     </header>
                     <section class="mdc-dialog__body mdc-dialog__body">
-                        <button type="button" id="confirm-check-pwned-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Check</button>
+                        <button type="button" id="confirm-check-pwned-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Yes</button>
                         <button type="button" id="close-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>                      
                     </section>
                     <footer class="mdc-dialog__footer">
@@ -259,6 +256,26 @@
                     </header>
                     <section class="mdc-dialog__body mdc-dialog__body">
                         <button type="button" id="confirm-delete-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Delete</button>                       
+                    </section>
+                    <footer class="mdc-dialog__footer">
+                    </footer>
+                </div>
+                <div class="mdc-dialog__backdrop"></div>
+            </aside>
+            <aside id="confirm-check-pwned-password-dialog"
+                class="mdc-dialog"
+                role="alertdialog"
+                aria-labelledby="my-mdc-dialog-label"
+                aria-describedby="my-mdc-dialog-description">
+                <div class="mdc-dialog__surface">
+                    <header class="mdc-dialog__header">
+                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                            Confirm Pwned Passwords Check
+                        </h2>
+                    </header>
+                    <section class="mdc-dialog__body mdc-dialog__body">
+                        <button type="button" id="confirm-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Check</button>
+                        <button type="button" id="cancel-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>
                     </section>
                     <footer class="mdc-dialog__footer">
                     </footer>

@@ -17,6 +17,7 @@ function Passwordr() {
     this.importKeePassXMLButton = document.getElementById('import-keepass-xml-button');    
     this.exportXMLButton = document.getElementById('export-xml-button');
     this.exportJSONButton = document.getElementById('export-json-button');
+    this.exportCSVButton = document.getElementById('export-keepass-csv-button');
     this.newPasswordButton = document.getElementById('new-password');
     this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
     this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
@@ -88,6 +89,7 @@ function Passwordr() {
     this.importKeePassXMLButton.addEventListener('click', this.importKeePassXML.bind(this));    
     this.exportXMLButton.addEventListener('click', this.exportXML.bind(this));
     this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
+    this.exportCSVButton.addEventListener('click', this.exportCSV.bind(this));
     this.confirmCheckPwnedButton.addEventListener('click', this.checkAllPwnedPasswords.bind(this));
     $(this.searchBox).on('input', function() {
         passwordr.filterList($(this).val());
@@ -856,6 +858,32 @@ Passwordr.prototype.exportJSON = function() {
     link.setAttribute('download', filename);
 
     link.dataset.downloadurl = ['text/plain', link.download, link.href].join(':');
+    link.draggable = true;
+    link.classList.add('dragout');
+
+    link.click();
+};
+
+// export data to a CSV file
+Passwordr.prototype.exportCSV = function() {
+    var passwords = 'title,url,password,note\n';
+
+    $('.password_template').each(function() {
+        passwords += $(this).find('.name').text() + ',' +
+                     $(this).find('.url').text() + ',' +
+                     $(this).find('.password').text() + ',' +
+                     $(this).find('.note').text() + '\n';
+    });
+
+    // download
+    var link = document.createElement('a');
+    var filename = 'passwords.csv';
+    var bb = new Blob([passwords], {type: 'text/csv'});
+
+    link.setAttribute('href', window.URL.createObjectURL(bb));
+    link.setAttribute('download', filename);
+
+    link.dataset.downloadurl = ['text/csv', link.download, link.href].join(':');
     link.draggable = true;
     link.classList.add('dragout');
 

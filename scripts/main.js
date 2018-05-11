@@ -40,9 +40,6 @@ class Passwordr {
         this.sortOptions = document.getElementById('sortOptions');
         this.numPasswords = 0;
         this.numEncrypted = 0;
-        this.i = 0;
-        this.csv = '';
-        this.data = '';
         var passwordr = this;
         this.newPasswordDialog.listen('MDCDialog:accept', function () {
             passwordr.newPassword();
@@ -432,9 +429,6 @@ class Passwordr {
                 // decrypt and show all fields
                 passwordr.decryptErrorShown = false;
                 $('.password_template').each(function () {
-                    console.log(passwordr.i);
-                    
-                    passwordr.i++;
                     var current_password = $(this);
                     var nameHeader = current_password.find('.name');
                     passwordr.decryptCSV(nameHeader);
@@ -742,10 +736,10 @@ class Passwordr {
     exportCSV() {
         var passwords = 'title,url,password,note\n';
         $('.password_template').each(function () {
-            passwords += $(this).find('.name').text().replace(/\n/g, ' ') + ',' +
-                $(this).find('.url').text().replace(/\n/g, ' ') + ',' +
-                $(this).find('.password').text().replace(/\n/g, ' ') + ',' +
-                $(this).find('.note').text().replace(/\n/g, ' ') + '\n';
+            passwords += $(this).find('.name').text().replace(/\n/g, ' ').replace(/\"/g, '\\\"') + ',' +
+                $(this).find('.url').text().replace(/\n/g, ' ').replace(/\"/g, '\\\"') + ',' +
+                $(this).find('.password').text().replace(/\n/g, ' ').replace(/\"/g, '\\\"') + ',' +
+                $(this).find('.note').text().replace(/\n/g, ' ').replace(/\"/g, '\\\"') + '\n';
         });
         // download
         var link = document.createElement('a');
@@ -764,30 +758,27 @@ class Passwordr {
         var iv = new Int8Array(ivLen);
         var passwordr = this;
         if (elem.textContent != null) { // no jQuery
-            passwordr.csv = elem.textContent.split(',');
+            var csv = elem.textContent.split(',');
         }
         else if (elem.text() != null) { // using jQuery
-            passwordr.csv = elem.text().split(',');
+            var csv = elem.text().split(',');
         }
 
-        if (passwordr.csv.length != 1 || passwordr.csv[0] != '') {
+        if (csv.length != 1 || csv[0] != '') {
             for (var i = 0; i < ivLen; i++) {
-                iv[i] = passwordr.csv[i];
+                iv[i] = csv[i];
             }
-            passwordr.data = new Int8Array(passwordr.csv.length - ivLen);
+            var data = new Int8Array(csv.length - ivLen);
             var dataIndex = 0;
-            for (var i = ivLen; i < passwordr.csv.length; i++) {
-                passwordr.data[dataIndex] = passwordr.csv[i];
+            for (var i = ivLen; i < csv.length; i++) {
+                data[dataIndex] = csv[i];
                 dataIndex++;
-            }
-            if (passwordr.data == null) {
-                debugger;
             }
             window.crypto.subtle.decrypt({
                 name: "AES-GCM",
                 iv: iv,
                 tagLength: 128
-            }, passwordr.encryptionKey, passwordr.data)
+            }, passwordr.encryptionKey, data)
                 .then(function (decrypted) {
                     if (elem.textContent != null) { // no jQuery
                         elem.textContent = new StringView(decrypted).toString();
@@ -798,7 +789,6 @@ class Passwordr {
                 })
                 .catch(function (err) {
                     if (!passwordr.decryptErrorShown) {
-                        debugger;
                         var data = {
                             message: 'Decryption error: ' + err,
                             timeout: 2000,

@@ -432,16 +432,12 @@ class Passwordr {
                     var current_password = $(this);
                     var nameHeader = current_password.find('.name');
                     passwordr.decryptCSV(nameHeader);
-                    nameHeader.prop('hidden', false);
                     var urlHeader = current_password.find('.url');
                     passwordr.decryptCSV(urlHeader);
-                    urlHeader.prop('hidden', false);
                     var passwordSection = current_password.find('.password');
                     passwordr.decryptCSV(passwordSection);
-                    passwordSection.prop('hidden', true);
                     var noteSection = current_password.find('.note');
                     passwordr.decryptCSV(noteSection);
-                    noteSection.prop('hidden', false);
                 });
                 setTimeout(function () { passwordr.sortList('A-Z'); }, 1000); // setTimeout is necessary, because otherwise the sorting will be done before list has been decrypted
             }).catch(function (err) {
@@ -782,9 +778,11 @@ class Passwordr {
                 .then(function (decrypted) {
                     if (elem.textContent != null) { // no jQuery
                         elem.textContent = new StringView(decrypted).toString();
+                        elem.hidden = false; // un-hide
                     }
                     else { // jQuery
                         elem.text(new StringView(decrypted).toString());
+                        elem.prop('hidden', false); // un-hide
                     }
                 })
                 .catch(function (err) {
@@ -1052,12 +1050,9 @@ class Passwordr {
         if (this.encryptionKey != null) {
             // encryption key exists, so show fields
             this.decryptCSV(nameHeader);
-            nameHeader.hidden = false;
             this.decryptCSV(urlHeader);
-            urlHeader.hidden = false;
             this.decryptCSV(passwordSection);
             this.decryptCSV(noteSection);
-            noteSection.hidden = false;
         }
         else {
             // the page just loaded, so do the revealing in setMasterPassword

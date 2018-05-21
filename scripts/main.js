@@ -40,6 +40,7 @@ class Passwordr {
         this.sortOptions = document.getElementById('sortOptions');
         this.numPasswords = 0;
         this.numEncrypted = 0;
+        this.PASSWORD_LEN = 32;
         var passwordr = this;
         this.newPasswordDialog.listen('MDCDialog:accept', function () {
             passwordr.newPassword();
@@ -417,41 +418,49 @@ class Passwordr {
     setMasterPassword() {
         var passwordr = this;
         if ($('#master-password').val() != null) {
-            var pass = $('#master-password').val();
-            while (pass.length < 32) {
-                pass += '0';
-            }
-            while (pass.length > 32) {
-                pass = pass.slice(0, -1);
-            }
-            window.crypto.subtle.importKey('raw', new StringView(pass).buffer, 'AES-GCM', false, ['encrypt', 'decrypt']).then(function (key) {
-                passwordr.encryptionKey = key;
-                // decrypt and show all fields
-                passwordr.decryptErrorShown = false;
-                $('.password_template').each(function () {
-                    var current_password = $(this);
-                    var nameHeader = current_password.find('.name');
-                    passwordr.decryptCSV(nameHeader);
-                    var urlHeader = current_password.find('.url');
-                    passwordr.decryptCSV(urlHeader);
-                    var passwordSection = current_password.find('.password');
-                    passwordr.decryptCSV(passwordSection);
-                    var noteSection = current_password.find('.note');
-                    passwordr.decryptCSV(noteSection);
-                });
-                setTimeout(function () { passwordr.sortList('A-Z'); }, 1000); // setTimeout is necessary, because otherwise the sorting will be done before list has been decrypted
-            }).catch(function (err) {
+	        if ($('#master-password').val().length <= passwordr.PASSWORD_LEN) {
+                var pass = $('#master-password').val();
+                while (pass.length < passwordr.PASSWORD_LEN) {
+                    pass += '0';
+                }
+		        window.crypto.subtle.importKey('raw', new StringView(pass).buffer, 'AES-GCM', false, ['encrypt', 'decrypt']).then(function (key) {
+        		        passwordr.encryptionKey = key;
+        		        // decrypt and show all fields
+        		        passwordr.decryptErrorShown = false;
+        		        $('.password_template').each(function () {
+        		            var current_password = $(this);
+        		            var nameHeader = current_password.find('.name');
+        		            passwordr.decryptCSV(nameHeader);
+        		            var urlHeader = current_password.find('.url');
+        		            passwordr.decryptCSV(urlHeader);
+        		            var passwordSection = current_password.find('.password');
+        		            passwordr.decryptCSV(passwordSection);
+        		            var noteSection = current_password.find('.note');
+        		            passwordr.decryptCSV(noteSection);
+        		        });
+        		        setTimeout(function () { passwordr.sortList('A-Z'); }, 1000); // setTimeout is necessary, because otherwise the sorting will be done before list has been decrypted
+		        }).catch(function (err) {
+        		    var data = {
+        		        message: 'Import error: ' + err,
+        		        timeout: 2000,
+        		        actionText: 'OK',
+        		        actionHandler: function () {
+        		        }
+        		    };
+        		    passwordr.messageSnackbar.show(data);
+		        });
+            } else {
                 var data = {
-                    message: 'Import error: ' + err,
+                    message: 'Master password cannot exceed 32 characters.',
                     timeout: 2000,
                     actionText: 'OK',
                     actionHandler: function () {
+                        passwordr.masterPasswordDialog.show();
                     }
                 };
-                passwordr.messageSnackbar.show(data);
-            });
-        }
-        else {
+                this.messageSnackbar.show(data)
+            }
+        } else {
             var data = {
                 message: 'Please provide a master password.',
                 timeout: 2000,

@@ -667,12 +667,13 @@ class Passwordr {
         // download
         var link = document.createElement('a');
         var filename = 'passwords.xml';
-        var bb = new Blob([sXML], { type: 'text/plain' });
+        var bb = new Blob([sXML], { type: 'text/xml' });
         link.setAttribute('href', window.URL.createObjectURL(bb));
         link.setAttribute('download', filename);
-        link.dataset.downloadurl = ['text/plain', link.download, link.href].join(':');
+        link.dataset.downloadurl = ['text/xml', link.download, link.href].join(':');
         link.draggable = true;
         link.classList.add('dragout');
+        document.body.appendChild(link);
         link.click();
     }
     // converts a plaintext password into a hex SHA-1 hash
@@ -729,12 +730,13 @@ class Passwordr {
         // download
         var link = document.createElement('a');
         var filename = 'passwords.json';
-        var bb = new Blob([passwords], { type: 'text/plain' });
+        var bb = new Blob([passwords], { type: 'application/json' });
         link.setAttribute('href', window.URL.createObjectURL(bb));
         link.setAttribute('download', filename);
-        link.dataset.downloadurl = ['text/plain', link.download, link.href].join(':');
+        link.dataset.downloadurl = ['application/json', link.download, link.href].join(':');
         link.draggable = true;
         link.classList.add('dragout');
+        document.body.appendChild(link);
         link.click();
     }
     // export data to a CSV file
@@ -755,6 +757,7 @@ class Passwordr {
         link.dataset.downloadurl = ['text/csv', link.download, link.href].join(':');
         link.draggable = true;
         link.classList.add('dragout');
+        document.body.appendChild(link);
         link.click();
     }
     // Decrypts a CSV field, and updates the specified element with the decrypted data

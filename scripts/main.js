@@ -41,6 +41,8 @@ class Passwordr {
         this.numPasswords = 0;
         this.numEncrypted = 0;
         this.PASSWORD_LEN = 32;
+        this.numDecrypted = 0; // # of passwords that have been decrypted
+        this.NUM_FIELDS = 4; // # of different fiellds
         var passwordr = this;
         this.newPasswordDialog.listen('MDCDialog:accept', function () {
             passwordr.newPassword();
@@ -437,8 +439,7 @@ class Passwordr {
         		            passwordr.decryptCSV(passwordSection);
         		            var noteSection = current_password.find('.note');
         		            passwordr.decryptCSV(noteSection);
-        		        });
-        		        setTimeout(function () { passwordr.sortList('A-Z'); }, 1000); // setTimeout is necessary, because otherwise the sorting will be done before list has been decrypted
+                        });
 		        }).catch(function (err) {
         		    var data = {
         		        message: 'Import error: ' + err,
@@ -795,6 +796,11 @@ class Passwordr {
                     else { // jQuery
                         elem.text(new StringView(decrypted).toString());
                         elem.prop('hidden', false); // un-hide
+                    }
+                    passwordr.numDecrypted++; // increment # of decrypted passwords
+                    // if this was the last password to be decrypted, sort the list in descending alphabetical order
+                    if (passwordr.numDecrypted == $('.password_template').length * passwordr.NUM_FIELDS) {
+                        passwordr.sortList('A-Z');
                     }
                 })
                 .catch(function (err) {

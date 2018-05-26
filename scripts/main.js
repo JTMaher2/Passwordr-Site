@@ -783,6 +783,7 @@ class Passwordr {
                 data[dataIndex] = csv[i];
                 dataIndex++;
             }
+
             window.crypto.subtle.decrypt({
                 name: "AES-GCM",
                 iv: iv,
@@ -812,6 +813,7 @@ class Passwordr {
                             actionHandler: function () {
                             }
                         };
+                        passwordr.numDecrypted++; // skip over this field
                         passwordr.messageSnackbar.show(data);
                         passwordr.decryptErrorShown = true;
                     }
@@ -1065,7 +1067,7 @@ class Passwordr {
         noteSection.textContent = note;
         // hide password until user clicks "Show"
         passwordSection.hidden = true;
-        if (this.encryptionKey != null) {
+        if (this.encryptionKey != null) {            
             // encryption key exists, so show fields
             this.decryptCSV(nameHeader);
             this.decryptCSV(urlHeader);

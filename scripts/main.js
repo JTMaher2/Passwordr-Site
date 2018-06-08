@@ -186,7 +186,7 @@ class Passwordr {
         // Sign out of Firebase
         this.auth.signOut().then(function () {
             // Enable sign-in button
-            ui.start('#firebaseui-auth-container', uiConfig); // adjust Firebase Auth UI
+            ui.start('#firebaseui-auth-container', uiConfig); // adjust Firebase Auth UI            
         }).catch(function (error) {
             console.log("Error: " + error);
         });
@@ -1155,7 +1155,7 @@ class Passwordr {
         else { // User is signed out
             // Hide user's profile, and disable sign-out button
             this.userName.setAttribute('hidden', true);
-            this.userPic.removeAttribute('src');
+            $(this.userPic).prop('src', 'images/Antu_im-invisible-user.svg.png');
             this.signOutButton.setAttribute('disabled', true);
             $('#firebaseui-auth-container').prop('hidden', false);
             // remove passwords from list

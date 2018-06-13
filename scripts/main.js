@@ -42,7 +42,7 @@ class Passwordr {
         this.numEncrypted = 0;
         this.PASSWORD_LEN = 32;
         this.numDecrypted = 0; // # of passwords that have been decrypted
-        this.NUM_FIELDS = 4; // # of different fiellds
+        this.NUM_FIELDS = 4; // # of different fields
         var passwordr = this;
         this.newPasswordDialog.listen('MDCDialog:accept', function () {
             passwordr.newPassword();
@@ -1112,6 +1112,9 @@ class Passwordr {
         unsubscribe();
         // Change handlers
         var setPassword = function (data) {
+            if ($('#loadingOverlay').css('display') == 'block') {
+                $('#loadingOverlay').css('display', 'none');
+            }
             var val = data.data();
             this.displayPassword(data.id, val.name, val.url, val.password, val.note);
         }.bind(this);
@@ -1150,6 +1153,7 @@ class Passwordr {
                 // get master password
                 this.masterPasswordDialog.show();
                 this.loadPasswords();
+                $('#loadingOverlay').css('display', 'block'); // show the loading overlay
             }.bind(this));
         }
         else { // User is signed out

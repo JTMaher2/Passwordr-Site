@@ -23,11 +23,11 @@
         <script src="scripts/main.js"></script>
         <script src="scripts/stringview.js"></script>
         <script src="scripts/sha1.js"></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"
-        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-        crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+        <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
+        <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
         <script>
-              // Initialize Firebase
+            // Initialize Firebase
               var config = {
                 apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
                 authDomain: "passwordr-3917b.firebaseapp.com",
@@ -37,10 +37,6 @@
                 messagingSenderId: "690176352805"
               };
               firebase.initializeApp(config);
-        </script>
-        <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
-        <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
-        <script>
             var uiConfig = {
                 signInSuccessUrl: '#',
                 signInOptions: [
@@ -56,6 +52,46 @@
             ui.start('#firebaseui-auth-container', uiConfig);
             ui.disableAutoSignIn();
         </script>
+        <style>
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
+
+            .tooltip .tooltiptext {
+                visibility: hidden;
+                width: 480px;
+                background-color: #555;
+                color: #fff;
+                text-align: center;
+                border-radius: 1px;
+                padding: 5px 0;
+                position: absolute;
+                z-index: 1;
+                bottom: 100%;
+                left: 50%;
+                margin-left: -60px;
+                opacity: 0;
+                transition: opacity 0.3s;
+                font-size: 14px;
+            }
+
+            .tooltip .tooltiptext::after {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: #555 transparent transparent transparent;
+            }
+
+            .tooltip:hover .tooltiptext {
+                visibility: visible;
+                opacity: 1;
+            }
+        </style>
     </head>
     <body>
         <header>
@@ -178,14 +214,16 @@
                         </div><br/>
                         <div class="mdc-textfield">
                             Password:
-                            <input type="text" id="add-password-input" class="mdc-textfield__input" required>
+                            <input type="password" id="add-password-input" class="mdc-textfield__input" required>
                             <div class="mdc-textfield__bottom-line"></div>
                         </div>
                         <button type="button" id="generate-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
+                        <button type="button" id="check-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Check</button>
+                        <div class='tooltip'><img src='images/Glossy_3d_blue_questionmark.png'/><span class='tooltiptext'>Click the "Check" button to see if the entered password has been exposed in a data breach.</span></div>
                         <br/>
                         <div class="mdc-textfield">
                             Confirm:
-                            <input type="text" id="add-confirm-password-input" class="mdc-textfield__input" required>
+                            <input type="password" id="add-confirm-password-input" class="mdc-textfield__input" required>
                             <div class="mdc-textfield__bottom-line"></div>
                         </div><br/>
                         <div class="mdc-textfield">

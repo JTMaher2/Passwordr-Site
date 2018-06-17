@@ -20,6 +20,7 @@ class Passwordr {
         this.exportCSVButton = document.getElementById('export-keepass-csv-button');
         this.newPasswordButton = document.getElementById('new-password');
         this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
+        this.checkNewPasswordButton = document.getElementById('check-new-password-button');
         this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
         this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');
         this.confirmCheckPwnedPasswordButton = document.getElementById('confirm-check-pwned-password-button');
@@ -77,6 +78,7 @@ class Passwordr {
             passwordr.newPasswordDialog.show();
         });
         this.generateNewPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#add-password-input'), $('#add-confirm-password-input')));
+        this.checkNewPasswordButton.addEventListener('click', this.checkPwnedNewPassword.bind(this, $('#add-password-input')));
         this.generateMasterPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#new-master-password'), $('#confirm-new-master-password')));
         this.importXMLButton.addEventListener('click', this.importXML.bind(this));
         this.importJSONButton.addEventListener('click', this.importJSON.bind(this));
@@ -219,6 +221,30 @@ class Passwordr {
             $(confirmPasswordField).val(password);
         }
     }
+
+    // checks the Pwned Passwords API to see if a single password has been breached
+    checkPwnedNewPassword(passwordField) {
+        var hashedPassword = passwordr.getSHA1($(passwordField).text());
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var matches = this.responseText.split('\n');
+                var numNonMatching = 0;
+                matches.forEach(function (match) {
+                    if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                        passwordField.css('background-color', 'red'); // pwned
+                    }
+                    else {
+                        passwordField.css('background-color', 'green'); // not pwned
+                    }
+                    return;
+                });
+            }
+        };
+        xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+        xhttp.send();
+    }
+
     // convert an ArrayBuffer into CSV format
     bufferToCSV(buffer, length) {
         var csv = '';

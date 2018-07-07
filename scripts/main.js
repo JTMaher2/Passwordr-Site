@@ -28,6 +28,7 @@ class Passwordr {
         this.confirmCheckPwnedButton = document.getElementById('confirm-check-pwned-button');
         this.userPic = document.getElementById('user-pic');
         this.userName = document.getElementById('user-name');
+        this.lastSignedInHeader = document.getElementById('lastLoggedInHeader');
         this.messageSnackbar = new MDCSnackbar(document.getElementById('message-snackbar'));
         this.newPasswordDialog = new MDCDialog(document.getElementById('new-password-dialog'));
         this.masterPasswordDialog = new MDCDialog(document.getElementById('master-password-dialog'));
@@ -180,6 +181,7 @@ class Passwordr {
         // Shortcuts to Firebase SDK features
         this.auth = firebase.auth();
         this.database = firebase.firestore();
+        this.database.settings({timestampsInSnapshots: true});
         // Initiate Firebase Auth, and listen to auth state changes
         this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
     }
@@ -1151,7 +1153,7 @@ class Passwordr {
             }
         }.bind(this);
         this.passwordsRef.onSnapshot(function (snapshot) {
-            snapshot.docChanges.forEach(function (change) {
+            snapshot.docChanges().forEach(function (change) {
                 if (change.type === 'added' || change.type === 'modified') {
                     setPassword(change.doc);
                 }
@@ -1180,6 +1182,10 @@ class Passwordr {
                 this.masterPasswordDialog.show();
                 this.loadPasswords();
                 $('#loadingOverlay').css('display', 'block'); // show the loading overlay
+
+                // display last signed in header
+                $(this.lastSignedInHeader).css('display', 'block');
+                this.lastSignedInHeader.innerHTML = 'Last signed in: ' + user.metadata.lastSignInTime;
             }.bind(this));
         }
         else { // User is signed out
@@ -1192,6 +1198,7 @@ class Passwordr {
             while (this.passwordList.hasChildNodes()) {
                 this.passwordList.removeChild(this.passwordList.lastChild);
             }
+            $(this.lastSignedInHeader).css('display', 'none'); // hide the last signed in header
         }
     }
 };

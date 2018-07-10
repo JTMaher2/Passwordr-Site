@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "passwordr",
+            "package_name": "io.github.jtmaher2.passwordr",
+            "sha256_cert_fingerprints": [
+                "EE:55:47:17:0E:99:7D:5B:A7:67:71:D2:60:AE:D3:2A:2F:29:22:7D:14:24:36:B3:7C:80:F3:DF:84:37:B8:E6"
+            ]
+        }
+    }
+]

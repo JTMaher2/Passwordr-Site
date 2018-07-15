@@ -1,351 +1,369 @@
 <!DOCTYPE html>
 <html class="mdc-typography">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Passwordr</title>
-        <link
-            rel="stylesheet"
-            href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
-        <style>
-            .firebaseui-idp-list {
-                display: flex;
-            }
-            .firebaseui-container {
-                max-width: 720px !important;
-            }
-        </style>
-        <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-        <script>window.mdc.autoInit();</script>
-        <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-app.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-auth.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-firestore.js"></script>
-        <script src="scripts/main.js"></script>
-        <script src="scripts/stringview.js"></script>
-        <script src="scripts/sha1.js"></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-        <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
-        <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
-        <script>
-              var config = {
-                apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
-                authDomain: "passwordr-3917b.firebaseapp.com",
-                databaseURL: "https://passwordr-3917b.firebaseio.com",
-                projectId: "passwordr-3917b",
-                storageBucket: "passwordr-3917b.appspot.com",
-                messagingSenderId: "690176352805"
-              };
-              firebase.initializeApp(config);
-            var uiConfig = {
-                signInSuccessUrl: '#',
-                signInOptions: [
-                    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-                    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-                    firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-                    firebase.auth.GithubAuthProvider.PROVIDER_ID,
-                ],
-                tosUrl: 'tos.html'
-            };
 
-            var ui = new firebaseui.auth.AuthUI(firebase.auth());
-            ui.start('#firebaseui-auth-container', uiConfig);
-            ui.disableAutoSignIn();
-        </script>
-        <style>
-            .tooltip {
-                position: relative;
-                display: inline-block;
-            }
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Passwordr</title>
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+    <style>
+        .firebaseui-idp-list {
+            display: flex;
+        }
 
-            .tooltip .tooltiptext {
-                visibility: hidden;
-                width: 480px;
-                background-color: #555;
-                color: #fff;
-                text-align: center;
-                border-radius: 1px;
-                padding: 5px 0;
-                position: absolute;
-                z-index: 1;
-                bottom: 100%;
-                left: 50%;
-                margin-left: -60px;
-                opacity: 0;
-                transition: opacity 0.3s;
-                font-size: 14px;
-            }
+        .firebaseui-container {
+            max-width: 720px !important;
+        }
+    </style>
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <script>window.mdc.autoInit();</script>
+    <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.1.0/firebase-firestore.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/stringview.js"></script>
+    <script src="scripts/sha1.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+    <script>
+        var config = {
+            apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
+            authDomain: "passwordr-3917b.firebaseapp.com",
+            databaseURL: "https://passwordr-3917b.firebaseio.com",
+            projectId: "passwordr-3917b",
+            storageBucket: "passwordr-3917b.appspot.com",
+            messagingSenderId: "690176352805"
+        };
+        firebase.initializeApp(config);
+        var uiConfig = {
+            signInSuccessUrl: '#',
+            signInOptions: [
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+                firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+                firebase.auth.GithubAuthProvider.PROVIDER_ID,
+            ],
+            tosUrl: 'tos.html'
+        };
 
-            .tooltip .tooltiptext::after {
-                content: "";
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                margin-left: -5px;
-                border-width: 5px;
-                border-style: solid;
-                border-color: #555 transparent transparent transparent;
-            }
+        var ui = new firebaseui.auth.AuthUI(firebase.auth());
+        ui.start('#firebaseui-auth-container', uiConfig);
+        ui.disableAutoSignIn();
+    </script>
+    <style>
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
 
-            .tooltip:hover .tooltiptext {
-                visibility: visible;
-                opacity: 1;
-            }
-        </style>
-    </head>
-    <body>
-        <header>
-            <div class="mdc-card">
-                <div class="mdc-card__horizontal-block">
-                    <section class="mdc-card__primary">
-                        <h1 id="user-name" class="mdc-card__title mdc-card__title--large" style="margin-left: 100px;">Loading...</h1>
-                    </section>
-                    <img id="user-pic" class="mdc-card__media-item" style="float:right;width:100px;height:100px;">
-                </div>
-                <section class="mdc-card__actions">
-                    <div id="firebaseui-auth-container"></div>
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 480px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 1px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="mdc-card">
+            <div class="mdc-card__horizontal-block">
+                <section class="mdc-card__primary">
+                    <h1 id="user-name" class="mdc-card__title mdc-card__title--large" style="margin-left: 100px;">Loading...</h1>
                 </section>
-                <div style="display:flex;">
-                    <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
-                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
-                    <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
-                    <button id="check-pwned-button" class="mdc-button mdc-button--compact mdc-card__action">Check All</button>
-                </div>
+                <img id="user-pic" class="mdc-card__media-item" style="float:right;width:100px;height:100px;">
             </div>
-        </header>
-        <main>
-            <h3 id='lastLoggedInHeader' style='color:green;display:none;'></h3>
-            <div id='loadingOverlay' style='display:none;position:fixed;top:0px;right:0px;bottom:0px;left:0px;background-color:rgba(0,0,0,0.4);text-align:center;font-size:50px;z-index:9999;'>
-                <p style='position:absolute;margin:auto;height:80px;top:0px;bottom:0px;left:0px;right:0px;color:#ffe;text-shadow:0px 1px 0px #999, 0px 2px 0px #888, 0px 3px 0px #777, 0px 4px 0px;font-size: 80px;font-weight:700'>
-                    Loading...
-                </p>
+            <section class="mdc-card__actions">
+                <div id="firebaseui-auth-container"></div>
+            </section>
+            <div style="display:flex;">
+                <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
+                <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
+                <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
+                <button id="check-pwned-button" class="mdc-button mdc-button--compact mdc-card__action">Check All</button>
+                <button id="settings-button" class="mdc-button mdc-button--compact mdc-card__action">Settings</button>
             </div>
-            <a href="https://github.com/jtmaher2/passwordr-site"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png" alt="Fork me on GitHub"></a>
-            <h1 class="mdc-typography--display1">Passwords</h1>
-            <button id="new-password" class="mdc-button mdc-button--compact mdc-card__action" disabled>New</button>
-            Sort:
-            <select id="sortOptions">
-                <option>A-Z</option>
-                <option>Z-A</option>
-            </select>
-            <div style="float:right;">
-                Filter: <input type="text" id="searchBox"/><br/>
+        </div>
+    </header>
+    <main>
+        <h3 id='lastLoggedInHeader' style='color:green;display:none;'></h3>
+        <div id='loadingOverlay' style='display:none;position:fixed;top:0px;right:0px;bottom:0px;left:0px;background-color:rgba(0,0,0,0.4);text-align:center;font-size:50px;z-index:9999;'>
+            <p style='position:absolute;margin:auto;height:80px;top:0px;bottom:0px;left:0px;right:0px;color:#ffe;text-shadow:0px 1px 0px #999, 0px 2px 0px #888, 0px 3px 0px #777, 0px 4px 0px;font-size: 80px;font-weight:700'>
+                Loading...
+            </p>
+        </div>
+        <a href="https://github.com/jtmaher2/passwordr-site">
+            <img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"
+                alt="Fork me on GitHub">
+        </a>
+        <h1 class="mdc-typography--display1">Passwords</h1>
+        <button id="new-password" class="mdc-button mdc-button--compact mdc-card__action" disabled>New</button>
+        Sort:
+        <select id="sortOptions">
+            <option>A-Z</option>
+            <option>Z-A</option>
+        </select>
+        <div style="float:right;">
+            Filter:
+            <input type="text" id="searchBox" />
+            <br/>
+        </div>
+        <div id="passwords">
+        </div>
+        <div id="message-snackbar" class="mdc-snackbar" aria-live="assertive" aria-atomic="true" aria-hidden="true">
+            <div class="mdc-snackbar__text"></div>
+            <div class="mdc-snackbar__action-wrapper">
+                <button type="button" class="mdc-snackbar__action-button">OK</button>
             </div>
-            <div id="passwords">
+        </div>
+        <aside id="master-password-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Enter Master Password
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <div class="mdc-textfield mdc-textfield--fullwidth">
+                        <input type="password" id="master-password" class="mdc-textfield__input" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                </section>
+                <footer class="mdc-dialog__footer">
+                    <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
+                </footer>
             </div>
-            <div id="message-snackbar"
-                 class="mdc-snackbar"
-                 aria-live="assertive"
-                 aria-atomic="true"
-                 aria-hidden="true">
-                <div class="mdc-snackbar__text"></div>
-                <div class="mdc-snackbar__action-wrapper">
-                    <button type="button" class="mdc-snackbar__action-button">OK</button>
-                </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="change-master-password-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Change Master Password
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <div class="mdc-textfield mdc-textfield--fullwidth">
+                        New Password:
+                        <input type="text" id="new-master-password" class="mdc-textfield__input" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                    <button type="button" id="generate-master-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
+                    <div class="mdc-textfield mdc-textfield--fullwidth">
+                        Confirm:
+                        <input type="text" id="confirm-new-master-password" class="mdc-textfield__input" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                </section>
+                <footer class="mdc-dialog__footer">
+                    <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
+                </footer>
             </div>
-            <aside id="master-password-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Enter Master Password
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <div class="mdc-textfield mdc-textfield--fullwidth">
-                            <input type="password" id="master-password" class="mdc-textfield__input" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div>
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                        <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="change-master-password-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Change Master Password
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <div class="mdc-textfield mdc-textfield--fullwidth">
-                            New Password:
-                            <input type="text" id="new-master-password" class="mdc-textfield__input" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div>
-                        <button type="button" id="generate-master-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
-                        <div class="mdc-textfield mdc-textfield--fullwidth">
-                            Confirm:
-                            <input type="text" id="confirm-new-master-password" class="mdc-textfield__input" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div>
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                        <button type="button" id="submit-master-password" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Submit</button>
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="new-password-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            New Password
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body--scrollable">
-                        <div class="mdc-textfield">
-                            Name:
-                            <input type="text" id="add-name-input" class="mdc-textfield__input" aria-controls="name-validation-msg" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
-                        <div class="mdc-textfield">
-                            Password:
-                            <input type="password" id="add-password-input" class="mdc-textfield__input" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div>
-                        <button type="button" id="generate-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
-                        <button type="button" id="check-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Check</button>
-                        <div class='tooltip'><img src='images/Glossy_3d_blue_questionmark.png'/><span class='tooltiptext'>Click the "Check" button to see if the entered password has been exposed in a data breach.</span></div>
-                        <br/>
-                        <div class="mdc-textfield">
-                            Confirm:
-                            <input type="password" id="add-confirm-password-input" class="mdc-textfield__input" required>
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
-                        <div class="mdc-textfield">
-                            URL (optional):
-                            <input type="text" id="add-url-input" class="mdc-textfield__input">
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div><br/>
-                        <div class="mdc-textfield">
-                            Note (optional):
-                            <input type="text" id="add-note-input" class="mdc-textfield__input">
-                            <div class="mdc-textfield__bottom-line"></div>
-                        </div>
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                        <button type="button" id="cancel-add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Cancel</button>
-                        <button type="button" id="add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Add</button>
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="import-export-data-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Import/Export Data
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <button type="button" id="import-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import XML</button>
-                        <button type="button" id="export-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export XML</button><br/>
-                        <button type="button" id="import-json-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import JSON</button>
-                        <button type="button" id="export-json-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export JSON</button><br/>
-                        <button type="button" id="import-keepass-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import KeePass XML</button>                        
-                        <button type="button" id="export-keepass-csv-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export KeePass CSV</button><br/>
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="check-pwned-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Are you sure you want to check all of your passwords against the Pwned Passwords API?
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <button type="button" id="confirm-check-pwned-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Yes</button>
-                        <button type="button" id="close-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>                      
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="confirm-delete-password-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Confirm Delete
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <button type="button" id="confirm-delete-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Delete</button>                       
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="confirm-check-pwned-password-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Confirm Pwned Passwords Check
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                        <button type="button" id="confirm-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Check</button>
-                        <button type="button" id="cancel-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded" style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-            <aside id="encrypting-passwords-dialog"
-                class="mdc-dialog"
-                role="alertdialog"
-                aria-labelledby="my-mdc-dialog-label"
-                aria-describedby="my-mdc-dialog-description">
-                <div class="mdc-dialog__surface">
-                    <header class="mdc-dialog__header">
-                        <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
-                            Encrypting passwords. Please wait...
-                        </h2>
-                    </header>
-                    <section class="mdc-dialog__body mdc-dialog__body">
-                    </section>
-                    <footer class="mdc-dialog__footer">
-                        <button type="button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">Cancel</button>
-                    </footer>
-                </div>
-                <div class="mdc-dialog__backdrop"></div>
-            </aside>
-        </main>
-    </body>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="new-password-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        New Password
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body--scrollable">
+                    <div class="mdc-textfield">
+                        Name:
+                        <input type="text" id="add-name-input" class="mdc-textfield__input" aria-controls="name-validation-msg" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                    <br/>
+                    <div class="mdc-textfield">
+                        Password:
+                        <input type="password" id="add-password-input" class="mdc-textfield__input" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                    <button type="button" id="generate-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
+                    <button type="button" id="check-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Check</button>
+                    <i class='material-icons c5e-help-icon'>Checks the
+                        <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a></i>
+                    <br/>
+                    <div class="mdc-textfield">
+                        Confirm:
+                        <input type="password" id="add-confirm-password-input" class="mdc-textfield__input" required>
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                    <br/>
+                    <div class="mdc-textfield">
+                        URL (optional):
+                        <input type="text" id="add-url-input" class="mdc-textfield__input">
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                    <br/>
+                    <div class="mdc-textfield">
+                        Note (optional):
+                        <input type="text" id="add-note-input" class="mdc-textfield__input">
+                        <div class="mdc-textfield__bottom-line"></div>
+                    </div>
+                </section>
+                <footer class="mdc-dialog__footer">
+                    <button type="button" id="cancel-add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Cancel</button>
+                    <button type="button" id="add-btn" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Add</button>
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="import-export-data-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Import/Export Data
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <button type="button" id="import-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import XML</button>
+                    <button type="button" id="export-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export XML</button>
+                    <br/>
+                    <button type="button" id="import-json-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import JSON</button>
+                    <button type="button" id="export-json-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export JSON</button>
+                    <br/>
+                    <button type="button" id="import-keepass-xml-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Import KeePass XML</button>
+                    <button type="button" id="export-keepass-csv-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Export KeePass CSV</button>
+                    <br/>
+                </section>
+                <footer class="mdc-dialog__footer">
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="check-pwned-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Are you sure you want to send hashes of all of your passwords to the
+                        <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a>?
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <button type="button" id="confirm-check-pwned-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Yes</button>
+                    <button type="button" id="close-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>
+                </section>
+                <footer class="mdc-dialog__footer">
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="settings-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Settings
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <button type="button" id="enable-disable-hibp-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;"></button>
+                    <button type="button" id="close-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>
+                </section>
+                <footer class="mdc-dialog__footer">
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="confirm-delete-password-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Confirm Delete
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <button type="button" id="confirm-delete-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Delete</button>
+                </section>
+                <footer class="mdc-dialog__footer">
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="confirm-check-pwned-password-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label"
+            aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Are you sure you want to send a hash of this password to the
+                        <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a>?
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                    <button type="button" id="confirm-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Check</button>
+                    <button type="button" id="cancel-check-pwned-password-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
+                        style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;">Close</button>
+                </section>
+                <footer class="mdc-dialog__footer">
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+        <aside id="encrypting-passwords-dialog" class="mdc-dialog" role="alertdialog" aria-labelledby="my-mdc-dialog-label" aria-describedby="my-mdc-dialog-description">
+            <div class="mdc-dialog__surface">
+                <header class="mdc-dialog__header">
+                    <h2 id="mdc-dialog-with-list-label" class="mdc-dialog__header__title">
+                        Encrypting passwords. Please wait...
+                    </h2>
+                </header>
+                <section class="mdc-dialog__body mdc-dialog__body">
+                </section>
+                <footer class="mdc-dialog__footer">
+                    <button type="button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel">Cancel</button>
+                </footer>
+            </div>
+            <div class="mdc-dialog__backdrop"></div>
+        </aside>
+    </main>
+</body>
+
 </html>

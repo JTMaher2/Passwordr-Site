@@ -25,7 +25,9 @@ class Passwordr {
         this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');
         this.confirmCheckPwnedPasswordButton = document.getElementById('confirm-check-pwned-password-button');
         this.checkPwnedButton = document.getElementById('check-pwned-button');
+        this.settingsButton = document.getElementById('settings-button');
         this.confirmCheckPwnedButton = document.getElementById('confirm-check-pwned-button');
+        this.enableDisableHIBPButton = document.getElementById('enable-disable-hibp-button');
         this.userPic = document.getElementById('user-pic');
         this.userName = document.getElementById('user-name');
         this.lastSignedInHeader = document.getElementById('lastLoggedInHeader');
@@ -35,6 +37,7 @@ class Passwordr {
         this.changeMasterPasswordDialog = new MDCDialog(document.getElementById('change-master-password-dialog'));
         this.importExportDataDialog = new MDCDialog(document.getElementById('import-export-data-dialog'));
         this.checkPwnedDialog = new MDCDialog(document.getElementById('check-pwned-dialog'));
+        this.settingsDialog = new MDCDialog(document.getElementById('settings-dialog'));
         this.confirmDeletePasswordDialog = new MDCDialog(document.getElementById('confirm-delete-password-dialog'));
         this.confirmCheckPwnedPasswordDialog = new MDCDialog(document.getElementById('confirm-check-pwned-password-dialog'));
         this.encryptingPasswordsDialog = new MDCDialog(document.getElementById('encrypting-passwords-dialog'));
@@ -68,6 +71,22 @@ class Passwordr {
             passwordr.checkPwnedDialog.lastFocusedTarget = evt.target;
             passwordr.checkPwnedDialog.show();
         });
+        this.settingsButton.addEventListener('click', function (evt) {
+            passwordr.settingsDialog.lastFocusedTarget = evt.target;
+            passwordr.settingsDialog.show();
+
+            // retrieve the document in the "settings" collection that belongs to this user
+            this.settingsRef = this.database.collection("settings").doc(this.auth.currentUser.uid).get();
+
+            
+            
+
+            if (passwordr.enableHIBP) {
+                passwordr.enableDisableHIBPButton.text('Disable Have I Been Pwned Checks');
+            } else {
+                passwordr.enableDisableHIBPButton.text('Enable Have I Been Pwned Checks');
+            }
+        });
         this.newPasswordButton.addEventListener('click', function (evt) {
             passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
             // clear old values (if any)
@@ -88,6 +107,7 @@ class Passwordr {
         this.exportJSONButton.addEventListener('click', this.exportJSON.bind(this));
         this.exportCSVButton.addEventListener('click', this.exportCSV.bind(this));
         this.confirmCheckPwnedButton.addEventListener('click', this.checkAllPwnedPasswords.bind(this));
+        this.enableDisableHIBPButton.addEventListener('click', this.enableDisableHIBP.bind(this));
         $(this.searchBox).on('input', function () {
             passwordr.filterList($(this).val());
         });
@@ -181,7 +201,7 @@ class Passwordr {
         // Shortcuts to Firebase SDK features
         this.auth = firebase.auth();
         this.database = firebase.firestore();
-        this.database.settings({timestampsInSnapshots: true});
+        this.database.settings({ timestampsInSnapshots: true });
         // Initiate Firebase Auth, and listen to auth state changes
         this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
     }
@@ -448,36 +468,36 @@ class Passwordr {
     setMasterPassword() {
         var passwordr = this;
         if ($('#master-password').val() != null) {
-	        if ($('#master-password').val().length <= passwordr.PASSWORD_LEN) {
+            if ($('#master-password').val().length <= passwordr.PASSWORD_LEN) {
                 var pass = $('#master-password').val();
                 while (pass.length < passwordr.PASSWORD_LEN) {
                     pass += '0';
                 }
-		        window.crypto.subtle.importKey('raw', new StringView(pass).buffer, 'AES-GCM', false, ['encrypt', 'decrypt']).then(function (key) {
-        		        passwordr.encryptionKey = key;
-        		        // decrypt and show all fields
-        		        passwordr.decryptErrorShown = false;
-        		        $('.password_template').each(function () {
-        		            var current_password = $(this);
-        		            var nameHeader = current_password.find('.name');
-        		            passwordr.decryptCSV(nameHeader);
-        		            var urlHeader = current_password.find('.url');
-        		            passwordr.decryptCSV(urlHeader);
-        		            var passwordSection = current_password.find('.password');
-        		            passwordr.decryptCSV(passwordSection);
-        		            var noteSection = current_password.find('.note');
-        		            passwordr.decryptCSV(noteSection);
-                        });
-		        }).catch(function (err) {
-        		    var data = {
-        		        message: 'Import error: ' + err,
-        		        timeout: 2000,
-        		        actionText: 'OK',
-        		        actionHandler: function () {
-        		        }
-        		    };
-        		    passwordr.messageSnackbar.show(data);
-		        });
+                window.crypto.subtle.importKey('raw', new StringView(pass).buffer, 'AES-GCM', false, ['encrypt', 'decrypt']).then(function (key) {
+                    passwordr.encryptionKey = key;
+                    // decrypt and show all fields
+                    passwordr.decryptErrorShown = false;
+                    $('.password_template').each(function () {
+                        var current_password = $(this);
+                        var nameHeader = current_password.find('.name');
+                        passwordr.decryptCSV(nameHeader);
+                        var urlHeader = current_password.find('.url');
+                        passwordr.decryptCSV(urlHeader);
+                        var passwordSection = current_password.find('.password');
+                        passwordr.decryptCSV(passwordSection);
+                        var noteSection = current_password.find('.note');
+                        passwordr.decryptCSV(noteSection);
+                    });
+                }).catch(function (err) {
+                    var data = {
+                        message: 'Import error: ' + err,
+                        timeout: 2000,
+                        actionText: 'OK',
+                        actionHandler: function () {
+                        }
+                    };
+                    passwordr.messageSnackbar.show(data);
+                });
             } else {
                 var data = {
                     message: 'Master password cannot exceed 32 characters.',
@@ -738,6 +758,18 @@ class Passwordr {
             xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
             xhttp.send();
         });
+    }
+    // either enables or disables the Have I Been Pwned functionality
+    enableDisableHIBP() {
+        if (passwordr.enableHIBP) {
+            $(this.checkNewPasswordButton).css('display', '');
+            $(this.checkPwnedButton).css('display', '');
+            $(this.confirmCheckPwnedButton).css('display', '');
+        } else {
+            $(this.checkNewPasswordButton).css('display', 'none');
+            $(this.checkPwnedButton).css('display', 'none');
+            $(this.confirmCheckPwnedButton).css('display', 'none');
+        }
     }
     // export data to a JSON file
     exportJSON() {
@@ -1095,7 +1127,7 @@ class Passwordr {
         noteSection.textContent = note;
         // hide password until user clicks "Show"
         passwordSection.hidden = true;
-        if (this.encryptionKey != null) {            
+        if (this.encryptionKey != null) {
             // encryption key exists, so show fields
             this.decryptCSV(nameHeader);
             this.decryptCSV(urlHeader);
@@ -1205,28 +1237,28 @@ class Passwordr {
 
 // Template for passwords
 Passwordr.PASSWORD_TEMPLATE =
-'<div class="mdc-card password_template">' +
+    '<div class="mdc-card password_template">' +
     '<section class="mdc-card__primary">' +
-        '<h1 class="name mdc-card__title mdc-card__title--large"></h1>' +
-        '<h2 class="url mdc-card__subtitle"></h2>' +
+    '<h1 class="name mdc-card__title mdc-card__title--large"></h1>' +
+    '<h2 class="url mdc-card__subtitle"></h2>' +
     '</section>' +
     '<section class="password mdc-card__supporting-text"></section>' +
-    '<section class="note mdc-card__supporting-text"></section>' +    
+    '<section class="note mdc-card__supporting-text"></section>' +
     '<section class="mdc-card__actions">' +
-        '<button class="reveal mdc-button mdc-button--compact mdc-card__action">Show</button>' +    
-        '<button class="edit mdc-button mdc-button--compact mdc-card__action">Edit</button>' +
-        '<button class="delete mdc-button mdc-button--compact mdc-card__action">Delete</button>' +
-        '<button class="check mdc-button mdc-button--compact mdc-card__action">Check</button>' +
+    '<button class="reveal mdc-button mdc-button--compact mdc-card__action">Show</button>' +
+    '<button class="edit mdc-button mdc-button--compact mdc-card__action">Edit</button>' +
+    '<button class="delete mdc-button mdc-button--compact mdc-card__action">Delete</button>' +
+    '<button class="check mdc-button mdc-button--compact mdc-card__action">Check</button>' +
     '</section>' +
-'</div>';
+    '</div>';
 
 // Template for name/url/password/note textfield
-Passwordr.TEXTFIELD_TEMPLATE = 
-'<div class="mdc-textfield">' +
-  '<input type="text" class="mdc-textfield__input">' +
-  '<div class="mdc-textfield__bottom-line"></div>' +
-'</div>'
+Passwordr.TEXTFIELD_TEMPLATE =
+    '<div class="mdc-textfield">' +
+    '<input type="text" class="mdc-textfield__input">' +
+    '<div class="mdc-textfield__bottom-line"></div>' +
+    '</div>'
 
-window.onload = function() {
+window.onload = function () {
     window.passwordr = new Passwordr();
 };

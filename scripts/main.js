@@ -48,6 +48,7 @@ class Passwordr {
         this.PASSWORD_LEN = 32;
         this.numDecrypted = 0; // # of passwords that have been decrypted
         this.NUM_FIELDS = 4; // # of different fields
+        this.enableHIBP = false;
         var passwordr = this;
         this.newPasswordDialog.listen('MDCDialog:accept', function () {
             passwordr.newPassword();
@@ -74,18 +75,6 @@ class Passwordr {
         this.settingsButton.addEventListener('click', function (evt) {
             passwordr.settingsDialog.lastFocusedTarget = evt.target;
             passwordr.settingsDialog.show();
-
-            // retrieve the document in the "settings" collection that belongs to this user
-            this.settingsRef = this.database.collection("settings").doc(this.auth.currentUser.uid).get();
-
-            
-            
-
-            if (passwordr.enableHIBP) {
-                passwordr.enableDisableHIBPButton.text('Disable Have I Been Pwned Checks');
-            } else {
-                passwordr.enableDisableHIBPButton.text('Enable Have I Been Pwned Checks');
-            }
         });
         this.newPasswordButton.addEventListener('click', function (evt) {
             passwordr.newPasswordDialog.lastFocusedTarget = evt.target;
@@ -761,14 +750,29 @@ class Passwordr {
     }
     // either enables or disables the Have I Been Pwned functionality
     enableDisableHIBP() {
-        if (passwordr.enableHIBP) {
-            $(this.checkNewPasswordButton).css('display', '');
-            $(this.checkPwnedButton).css('display', '');
-            $(this.confirmCheckPwnedButton).css('display', '');
+        // retrieve the document in the "settings" collection that belongs to this user, and toggle the "enableHIBP" setting
+        var enabled = !passwordr.enableHIBP;
+        this.database.collection("settings").doc(this.auth.currentUser.uid).set({'enableHIBP': enabled});
+        
+        // depending on the value of this setting, hide/show HIBP elements
+        this.toggleHIBPElems(enabled);
+
+        passwordr.enableHIBP = enabled;
+    }
+    // shows or hides elements related to the HIBP API
+    toggleHIBPElems(show) {
+        if (show) {
+            $(passwordr.checkNewPasswordButton).css('display', 'inline-flex');
+            $(passwordr.checkPwnedButton).css('display', 'flex');
+            $(passwordr.confirmCheckPwnedButton).css('display', 'inline-flex');
+            $('.password_template').find('.check').css('display', 'flex');
+            $(passwordr.enableDisableHIBPButton).text('Disable Have I Been Pwned Checks');
         } else {
-            $(this.checkNewPasswordButton).css('display', 'none');
-            $(this.checkPwnedButton).css('display', 'none');
-            $(this.confirmCheckPwnedButton).css('display', 'none');
+            $(passwordr.checkNewPasswordButton).css('display', 'none');
+            $(passwordr.checkPwnedButton).css('display', 'none');
+            $(passwordr.confirmCheckPwnedButton).css('display', 'none');
+            $('.password_template').find('.check').css('display', 'none');
+            $(passwordr.enableDisableHIBPButton).text('Enable Have I Been Pwned Checks');
         }
     }
     // export data to a JSON file
@@ -862,6 +866,10 @@ class Passwordr {
                     // if this was the last password to be decrypted, sort the list in descending alphabetical order
                     if (passwordr.numDecrypted == $('.password_template').length * passwordr.NUM_FIELDS) {
                         passwordr.sortList('A-Z');
+                        // show/hide HIBP API elems depending on stored setting
+                        passwordr.database.collection('settings').doc(passwordr.auth.currentUser.uid).get().then(function(settings){            
+                            passwordr.toggleHIBPElems(settings.data()['enableHIBP']);
+                        });
                     }
                 })
                 .catch(function (err) {
@@ -1197,6 +1205,7 @@ class Passwordr {
     }
     // Triggers when the user signs in or signs out
     onAuthStateChanged(user) {
+        var passwordr = this;
         if (user) { // User is signed in
             // Get profile pic and user's name from the Firebase user object
             var profilePicUrl = user.photoURL;

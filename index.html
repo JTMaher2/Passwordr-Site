@@ -27,6 +27,7 @@
         crossorigin="anonymous"></script>
     <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script>
         var config = {
             apiKey: "AIzaSyAFyGKKnCkHyZY1QmXxMNU6uUDjN-NeWZw",
@@ -60,7 +61,7 @@
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 480px;
+            width: 240px;
             background-color: #555;
             color: #fff;
             text-align: center;
@@ -107,8 +108,7 @@
                 <div id="firebaseui-auth-container"></div>
             </section>
             <div style="display:flex;">
-                <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign out</button>
-                <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change password</button>
+                <button id="sign-out" class="mdc-button mdc-button--compact mdc-card__action">Sign Out</button>
                 <button id="import-export-data-button" class="mdc-button mdc-button--compact mdc-card__action">Import/Export</button>
                 <button id="check-pwned-button" class="mdc-button mdc-button--compact mdc-card__action">Check All</button>
                 <button id="settings-button" class="mdc-button mdc-button--compact mdc-card__action">Settings</button>
@@ -181,6 +181,8 @@
                     </div>
                     <button type="button" id="generate-master-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded"
                         style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
+                    <button type="button" id="check-master-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Check</button>
+                    <div id="check-master-password-button-tooltip" class='tooltip'><i class="material-icons">help</i><span class='tooltiptext'>Checks the <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a></span></div>
                     <div class="mdc-textfield mdc-textfield--fullwidth">
                         Confirm:
                         <input type="text" id="confirm-new-master-password" class="mdc-textfield__input" required>
@@ -216,8 +218,7 @@
                     <button type="button" id="generate-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded"
                         style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Generate</button>
                     <button type="button" id="check-new-password-button" class="mdc-button mdc-dialog__footer__button mdc-ripple-upgraded" style="--mdc-ripple-surface-width:91.5156px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:54.9094px; --mdc-ripple-fg-scale:1.9731;">Check</button>
-                    <i class='material-icons c5e-help-icon'>Checks the
-                        <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a></i>
+                    <div id="check-new-password-button-tooltip" class='tooltip'><i class="material-icons">help</i><span class='tooltiptext'>Checks the <a href='https://haveibeenpwned.com/Passwords'>Have I Been Pwned API</a></span></div>
                     <br/>
                     <div class="mdc-textfield">
                         Confirm:
@@ -302,6 +303,7 @@
                     </h2>
                 </header>
                 <section class="mdc-dialog__body mdc-dialog__body">
+                    <button id="change-master-password" class="mdc-button mdc-button--compact mdc-card__action">Change Master Password</button>
                     <button type="button" id="enable-disable-hibp-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"
                         style="--mdc-ripple-surface-width:88.1875px; --mdc-ripple-surface-height:36px; --mdc-ripple-fg-size:52.9125px; --mdc-ripple-fg-scale:1.98918;"></button>
                     <button type="button" id="close-button" class="mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept mdc-ripple-upgraded"

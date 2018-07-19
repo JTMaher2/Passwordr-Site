@@ -21,6 +21,9 @@ class Passwordr {
         this.newPasswordButton = document.getElementById('new-password');
         this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
         this.checkNewPasswordButton = document.getElementById('check-new-password-button');
+        this.checkMasterPasswordButton = document.getElementById('check-master-password-button');
+        this.checkNewPasswordButtonTooltip = document.getElementById('check-new-password-button-tooltip');
+        this.checkMasterPasswordButtonTooltip = document.getElementById('check-master-password-button-tooltip');
         this.generateMasterPasswordButton = document.getElementById('generate-master-password-button');
         this.confirmDeletePasswordButton = document.getElementById('confirm-delete-password-button');
         this.confirmCheckPwnedPasswordButton = document.getElementById('confirm-check-pwned-password-button');
@@ -87,7 +90,8 @@ class Passwordr {
             passwordr.newPasswordDialog.show();
         });
         this.generateNewPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#add-password-input'), $('#add-confirm-password-input')));
-        this.checkNewPasswordButton.addEventListener('click', this.checkPwnedNewPassword.bind(this, $('#add-password-input')));
+        this.checkNewPasswordButton.addEventListener('click', this.checkPwnedPassword.bind(this, $('#add-password-input')));
+        this.checkMasterPasswordButton.addEventListener('click', this.checkPwnedPassword.bind(this, $('#new-master-password')));
         this.generateMasterPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#new-master-password'), $('#confirm-new-master-password')));
         this.importXMLButton.addEventListener('click', this.importXML.bind(this));
         this.importJSONButton.addEventListener('click', this.importJSON.bind(this));
@@ -234,7 +238,7 @@ class Passwordr {
     }
 
     // checks the Pwned Passwords API to see if a single password has been breached
-    checkPwnedNewPassword(passwordField) {
+    checkPwnedPassword(passwordField) {
         var hashedPassword = passwordr.getSHA1($(passwordField).text());
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
@@ -763,12 +767,18 @@ class Passwordr {
     toggleHIBPElems(show) {
         if (show) {
             $(passwordr.checkNewPasswordButton).css('display', 'inline-flex');
+            $(passwordr.checkMasterPasswordButton).css('display', 'inline-flex');
+            $(passwordr.checkNewPasswordButtonTooltip).css('display', 'inline-block');
+            $(passwordr.checkMasterPasswordButtonTooltip).css('display', 'inline-block');
             $(passwordr.checkPwnedButton).css('display', 'flex');
             $(passwordr.confirmCheckPwnedButton).css('display', 'inline-flex');
             $('.password_template').find('.check').css('display', 'flex');
             $(passwordr.enableDisableHIBPButton).text('Disable Have I Been Pwned Checks');
         } else {
             $(passwordr.checkNewPasswordButton).css('display', 'none');
+            $(passwordr.checkMasterPasswordButton).css('display', 'none');
+            $(passwordr.checkNewPasswordButtonTooltip).css('display', 'none');
+            $(passwordr.checkMasterPasswordButtonTooltip).css('display', 'none');
             $(passwordr.checkPwnedButton).css('display', 'none');
             $(passwordr.confirmCheckPwnedButton).css('display', 'none');
             $('.password_template').find('.check').css('display', 'none');
@@ -1051,7 +1061,7 @@ class Passwordr {
         });
     }
     // attempt to check a password against the Pwned Passwords API
-    checkPwnedPassword(key) {
+    checkPwnedPasswordList(key) {
         $('.password_template').each(function () {
             var passwordCard = $(this);
             if (passwordCard.prop('id') == key) {
@@ -1093,7 +1103,7 @@ class Passwordr {
     checkPwnedPasswordButtonClicked(key) {
         if (passwordr.checkSignedIn()) {
             // show the confirm check password dialog
-            passwordr.confirmCheckPwnedPasswordButton.addEventListener('click', passwordr.checkPwnedPassword.bind(this, key));
+            passwordr.confirmCheckPwnedPasswordButton.addEventListener('click', passwordr.checkPwnedPasswordList.bind(this, key));
             passwordr.confirmCheckPwnedPasswordDialog.show();
         }
     }

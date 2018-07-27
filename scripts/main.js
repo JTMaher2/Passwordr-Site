@@ -21,6 +21,7 @@ class Passwordr {
         this.newPasswordButton = document.getElementById('new-password');
         this.generateNewPasswordButton = document.getElementById('generate-new-password-button');
         this.checkNewPasswordButton = document.getElementById('check-new-password-button');
+        this.showNewPasswordButton = document.getElementById('show-new-password-button');
         this.checkMasterPasswordButton = document.getElementById('check-master-password-button');
         this.checkNewPasswordButtonTooltip = document.getElementById('check-new-password-button-tooltip');
         this.checkMasterPasswordButtonTooltip = document.getElementById('check-master-password-button-tooltip');
@@ -91,6 +92,7 @@ class Passwordr {
         });
         this.generateNewPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#add-password-input'), $('#add-confirm-password-input')));
         this.checkNewPasswordButton.addEventListener('click', this.checkPwnedPassword.bind(this, $('#add-password-input')));
+        this.showNewPasswordButton.addEventListener('click', this.showNewPassword.bind(this, $('#add-password-input'), $('#add-confirm-password-input')));
         this.checkMasterPasswordButton.addEventListener('click', this.checkPwnedPassword.bind(this, $('#new-master-password')));
         this.generateMasterPasswordButton.addEventListener('click', this.generatePassword.bind(this, $('#new-master-password'), $('#confirm-new-master-password')));
         this.importXMLButton.addEventListener('click', this.importXML.bind(this));
@@ -258,6 +260,13 @@ class Passwordr {
         };
         xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
         xhttp.send();
+    }
+
+    // reveals the new password
+    showNewPassword(passwordField, confirmPasswordField) {
+        $(passwordField).prop('type', 'text');
+        $(confirmPasswordField).prop('type', 'text');
+        $(this.showNewPasswordButton).prop('disabled', true);
     }
 
     // convert an ArrayBuffer into CSV format

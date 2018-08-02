@@ -1245,7 +1245,11 @@ class Passwordr {
 
                 // display last signed in header
                 $(this.lastSignedInHeader).css('display', 'block');
-                this.lastSignedInHeader.innerHTML = 'Last signed in: ' + user.metadata.lastSignInTime;
+                
+                passwordr.database.collection('settings').doc(passwordr.auth.currentUser.uid).get().then(function(userSettings){            
+                    passwordr.lastSignedInHeader.innerHTML = 'Last signed in: ' + userSettings.data()['lastSignInTime']; // from database, get last time the user signed in
+                    passwordr.database.collection('settings').doc(passwordr.auth.currentUser.uid).set({'enableHIBP': userSettings.data()['enableHIBP'], 'lastSignInTime': user.metadata.lastSignInTime}); // set current signed in time as next last login time
+                });
             }.bind(this));
         }
         else { // User is signed out

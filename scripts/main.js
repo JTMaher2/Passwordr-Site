@@ -889,6 +889,9 @@ class Passwordr {
                         passwordr.database.collection('settings').doc(passwordr.auth.currentUser.uid).get().then(function(settings){            
                             passwordr.toggleHIBPElems(settings.data()['enableHIBP']);
                         });
+
+                        // after 10 seconds, hide the "last signed in" header
+                        setTimeout(function(){$(passwordr.lastSignedInHeader).css('display', 'none');}, 10000);
                     }
                 })
                 .catch(function (err) {

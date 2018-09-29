@@ -1242,7 +1242,7 @@ class Passwordr {
                 this.signOutButton.removeAttribute('disabled');
                 $('#firebaseui-auth-container').prop('hidden', true);
                 // get master password
-                this.masterPasswordDialog.show();
+                $(this.masterPasswordDialog).show();
                 this.loadPasswords();
                 $('#loadingOverlay').css('display', 'block'); // show the loading overlay
 

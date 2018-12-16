@@ -249,25 +249,40 @@ class Passwordr {
 
     // checks the Pwned Passwords API to see if a single password has been breached
     checkPwnedPassword(passwordField) {
-        var hashedPassword = passwordr.getSHA1($(passwordField).text());
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                var matches = this.responseText.split('\n');
-                var numNonMatching = 0;
-                matches.forEach(function (match) {
-                    if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
-                        passwordField.css('background-color', 'red'); // pwned
-                    }
-                    else {
-                        passwordField.css('background-color', 'green'); // not pwned
-                    }
-                    return;
-                });
-            }
-        };
-        xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
-        xhttp.send();
+        var passwordr = this;
+        //var hashedPassword = passwordr.getSHA1($(passwordField).text());
+        window.crypto.subtle.digest(
+            {
+                name: "SHA-1",
+            },
+            passwordr.encoder.encode($(passwordField).text()) //The data you want to hash as an ArrayBuffer
+        )
+        .then(function(hashedPassword){
+            hashedPassword = passwordr.buf2hex(hashedPassword);
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var matches = this.responseText.split('\n');
+                    var numNonMatching = 0;
+                    matches.forEach(function (match) {
+                        if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                            passwordField.css('background-color', 'red'); // pwned
+                        }
+                        else {
+                            passwordField.css('background-color', 'green'); // not pwned
+                        }
+                        return;
+                    });
+                }
+            };
+            xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+
+            xhttp.send();
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
+        
     }
 
     // reveals the new password
@@ -789,38 +804,54 @@ class Passwordr {
         document.body.appendChild(link);
         link.click();
     }
-    // converts a plaintext password into a hex SHA-1 hash
-    getSHA1(password) {
-        var shaObj = new jsSHA("SHA-1", "TEXT");
-        shaObj.update(password);
-        return shaObj.getHash("HEX");
+
+    // converts an ArrayBuffer to a hex string
+    buf2hex(buffer) { // buffer is an ArrayBuffer
+        return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
     }
+
     // checks all passwords against PwnedPasswords API
     checkAllPwnedPasswords() {
+        var passwordr = this;
         $('.password_template').each(function () {
             var passwordCard = $(this);
             var password = passwordCard.find('.password').text();
-            var hashedPassword = passwordr.getSHA1(password);
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    var matches = this.responseText.split('\n');
-                    matches.forEach(function (match) {
-                        if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
-                            passwordCard.css('background-color', 'red'); // pwned
-                            return;
+//            var hashedPassword = passwordr.getSHA1(password);
+            window.crypto.subtle.digest(
+                {
+                    name: "SHA-1",
+                },
+                passwordr.encoder.encode(password) //The data you want to hash as an ArrayBuffer
+            )
+            .then(function(hashedPassword){
+                hashedPassword = passwordr.buf2hex(hashedPassword);
+                //returns the hash as an ArrayBuffer
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var matches = this.responseText.split('\n');
+                        matches.forEach(function (match) {
+                            if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                                passwordCard.css('background-color', 'red'); // pwned
+                                return;
+                            }
+                            else {
+                                numNonMatching++;
+                            }
+                        });
+                        if (numNonMatching == matches.length) {
+                            passwordCard.css('background-color', 'green'); // not pwned
                         }
-                        else {
-                            numNonMatching++;
-                        }
-                    });
-                    if (numNonMatching == matches.length) {
-                        passwordCard.css('background-color', 'green'); // not pwned
                     }
-                }
-            };
-            xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
-            xhttp.send();
+                };
+
+                xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+
+                xhttp.send();
+            })
+            .catch(function(err){
+                console.error(err);
+            });
         });
     }
     // either enables or disables the Have I Been Pwned functionality
@@ -1136,32 +1167,48 @@ class Passwordr {
     }
     // attempt to check a password against the Pwned Passwords API
     checkPwnedPasswordList(key) {
+        var passwordr = this;
         $('.password_template').each(function () {
             var passwordCard = $(this);
             if (passwordCard.prop('id') == key) {
                 var password = passwordCard.find('.password').text();
-                var hashedPassword = passwordr.getSHA1(password);
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        var matches = this.responseText.split('\n');
-                        var numNonMatching = 0;
-                        matches.forEach(function (match) {
-                            if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
-                                passwordCard.css('background-color', 'red'); // pwned
-                                return;
+                //var hashedPassword = passwordr.getSHA1(password);
+                window.crypto.subtle.digest(
+                    {
+                        name: "SHA-1",
+                    },
+                    passwordr.encoder.encode(password) //The data you want to hash as an ArrayBuffer
+                )
+                .then(function(hashedPassword){
+                    hashedPassword = passwordr.buf2hex(hashedPassword);
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            var matches = this.responseText.split('\n');
+                            var numNonMatching = 0;
+                            matches.forEach(function (match) {
+                                if (hashedPassword + match.substring(0, match.indexOf(':')) == hashedPassword) {
+                                    passwordCard.css('background-color', 'red'); // pwned
+                                    return;
+                                }
+                                else {
+                                    numNonMatching++;
+                                }
+                            });
+                            if (numNonMatching == matches.length) {
+                                passwordCard.css('background-color', 'green'); // not pwned
                             }
-                            else {
-                                numNonMatching++;
-                            }
-                        });
-                        if (numNonMatching == matches.length) {
-                            passwordCard.css('background-color', 'green'); // not pwned
                         }
-                    }
-                };
-                xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
-                xhttp.send();
+                    };
+
+                    xhttp.open("GET", "https://api.pwnedpasswords.com/range/" + hashedPassword.substring(0, 5), true);
+
+                    xhttp.send();
+                })
+                .catch(function(error) {
+                    console.error(error);
+                });
+                
             }
         });
     }
@@ -1177,7 +1224,7 @@ class Passwordr {
     checkPwnedPasswordButtonClicked(key) {
         if (passwordr.checkSignedIn()) {
             // show the confirm check password dialog
-            passwordr.confirmCheckPwnedPasswordButton.addEventListener('click', passwordr.checkPwnedPasswordList.bind(this, key));
+            passwordr.confirmCheckPwnedPasswordButton.addEventListener('click', passwordr.checkPwnedPasswordList.bind(passwordr, key));
             passwordr.confirmCheckPwnedPasswordDialog.show();
         }
     }
@@ -1260,7 +1307,9 @@ class Passwordr {
         // get all passwords that belong to user
         this.passwordsRef = this.database.collection("passwords").where("userid", "==", this.auth.currentUser.uid);
         // Remove old snapshot listener
-        var unsubscribe = this.passwordsRef.onSnapshot(function () { });
+        var unsubscribe = this.passwordsRef.onSnapshot(function () { 
+            
+        });
         unsubscribe();
         // Change handlers
         var setPassword = function (data) {

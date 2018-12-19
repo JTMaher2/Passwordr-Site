@@ -49,7 +49,6 @@ class Passwordr {
         this.sortOptions = document.getElementById('sortOptions');
         this.numPasswords = 0;
         this.numEncrypted = 0;
-        this.PASSWORD_LEN = 32;
         this.numDecrypted = 0; // # of passwords that have been decrypted
         this.NUM_FIELDS = 4; // # of different fields
         this.enableHIBP = false;
@@ -496,52 +495,41 @@ class Passwordr {
         var passwordr = this;
         var masterPassword = $('#master-password').val();
         if (masterPassword != null) {
-            if (masterPassword.length <= passwordr.PASSWORD_LEN) {
-                window.crypto.subtle.importKey(
-                    'raw',
-                    passwordr.encoder.encode(masterPassword),
-                    {name: 'PBKDF2'},
+            window.crypto.subtle.importKey(
+                'raw',
+                passwordr.encoder.encode(masterPassword),
+                {name: 'PBKDF2'},
+                false,
+                ['deriveKey']
+            ).then(function (key) {
+                window.crypto.subtle.deriveKey(
+                    { 
+                        "name": "PBKDF2",
+                        "salt": new Uint8Array(),
+                        "iterations": passwordr.DERIVE_KEY_ITERS,
+                        "hash": "SHA-256",
+                    },
+                    key,
+                    { "name": "AES-GCM",
+                        "iv": new Int8Array(passwordr.IV_LEN),
+                        "length": passwordr.AES_KEY_LEN
+                    },
                     false,
-                    ['deriveKey']
-                ).then(function (key) {
-                    window.crypto.subtle.deriveKey(
-                        { 
-                            "name": "PBKDF2",
-                            "salt": new Uint8Array(),
-                            "iterations": passwordr.DERIVE_KEY_ITERS,
-                            "hash": "SHA-256",
-                        },
-                        key,
-                        { "name": "AES-GCM",
-                          "iv": new Int8Array(passwordr.IV_LEN),
-                          "length": passwordr.AES_KEY_LEN
-                        },
-                        false,
-                        ["encrypt", "decrypt"]
-                    ).then(function(webKey){
-                        passwordr.encryptionKey = webKey;
-                        // decrypt and show all fields
-                        passwordr.decryptErrorShown = false;
-                        $('.password_template').each(function () {
-                            var current_password = $(this);
-                            var nameHeader = current_password.find('.name');
-                            passwordr.decryptCSV(nameHeader);
-                            var urlHeader = current_password.find('.url');
-                            passwordr.decryptCSV(urlHeader);
-                            var passwordSection = current_password.find('.password');
-                            passwordr.decryptCSV(passwordSection);
-                            var noteSection = current_password.find('.note');
-                            passwordr.decryptCSV(noteSection);
-                        });
-                    }).catch(function (err) {
-                        var data = {
-                            message: 'Import error: ' + err,
-                            timeout: passwordr.TIMEOUT,
-                            actionText: 'OK',
-                            actionHandler: function () {
-                            }
-                        };
-                        passwordr.messageSnackbar.show(data);
+                    ["encrypt", "decrypt"]
+                ).then(function(webKey){
+                    passwordr.encryptionKey = webKey;
+                    // decrypt and show all fields
+                    passwordr.decryptErrorShown = false;
+                    $('.password_template').each(function () {
+                        var current_password = $(this);
+                        var nameHeader = current_password.find('.name');
+                        passwordr.decryptCSV(nameHeader);
+                        var urlHeader = current_password.find('.url');
+                        passwordr.decryptCSV(urlHeader);
+                        var passwordSection = current_password.find('.password');
+                        passwordr.decryptCSV(passwordSection);
+                        var noteSection = current_password.find('.note');
+                        passwordr.decryptCSV(noteSection);
                     });
                 }).catch(function (err) {
                     var data = {
@@ -553,17 +541,16 @@ class Passwordr {
                     };
                     passwordr.messageSnackbar.show(data);
                 });
-            } else {
+            }).catch(function (err) {
                 var data = {
-                    message: 'Master password cannot exceed 32 characters.',
+                    message: 'Import error: ' + err,
                     timeout: passwordr.TIMEOUT,
                     actionText: 'OK',
                     actionHandler: function () {
-                        passwordr.masterPasswordDialog.show();
                     }
                 };
-                this.messageSnackbar.open(data)
-            }
+                passwordr.messageSnackbar.show(data);
+            });
         } else {
             var data = {
                 message: 'Please provide a master password.',
